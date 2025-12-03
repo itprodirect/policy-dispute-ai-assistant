@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.env
+data/raw_policies/
+data/raw_denials/
+*.pyc

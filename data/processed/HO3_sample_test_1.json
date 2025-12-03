@@ -1,0 +1,133 @@
+{
+  "policy_id": "HO3_sample_test_1",
+  "sections": [
+    {
+      "section_name": "UNKNOWN",
+      "summary_overall": "This section is the introductory agreement of the Homeowners 3 – Special Form policy, stating that the insurer will provide the insurance coverage described in the policy in exchange for the premium payment and the insured's compliance with all policy terms.",
+      "key_coverages": [],
+      "key_exclusions": [],
+      "conditions_notable": [
+        "Payment of premium is required",
+        "Compliance with all applicable provisions of the policy is required"
+      ],
+      "dispute_angles_possible": [
+        "Ambiguity about what specific coverages are included since this section does not detail them",
+        "Potential questions about what constitutes 'compliance with all applicable provisions' due to lack of detail here",
+        "No definitions or scope of coverage provided in this excerpt, which may lead to interpretation issues"
+      ]
+    },
+    {
+      "section_name": "DEFINITIONS",
+      "summary_overall": "This section defines key terms used throughout the property insurance policy, outlines the types of property and perils covered, and specifies the scope and limits of coverage for dwelling, other structures, personal property, and additional coverages. It also details exclusions, conditions, and duties related to claims and loss events.",
+      "key_coverages": [
+        "Coverage A - Dwelling: Covers the dwelling and attached structures on the residence premises, excluding land.",
+        "Coverage B - Other Structures: Covers other structures on the residence premises separated from the dwelling, with certain rental and business use limitations.",
+        "Coverage C - Personal Property: Covers personal property owned or used by insureds anywhere in the world, with special limits on certain categories like money, jewelry, firearms, and business property.",
+        "Coverage D - Loss of Use: Covers additional living expenses, fair rental value, and civil authority prohibitions due to covered losses making the residence uninhabitable.",
+        "Additional Coverages: Includes debris removal, reasonable repairs, tree removal, fire department service charges, property removal, credit card and forgery losses, loss assessment, collapse, glass breakage, landlord's furnishings, ordinance or law increased costs, and grave markers."
+      ],
+      "key_exclusions": [
+        "Losses due to wear and tear, mechanical breakdown, latent defects, corrosion, smoke from agricultural or industrial operations, settling or cracking, vermin or insect damage, and animal damage.",
+        "Losses caused by freezing unless reasonable care is taken to maintain heat or shut off water supply.",
+        "Losses from theft by insureds, theft from dwellings under construction, or theft of certain property types off the residence premises.",
+        "Losses due to mold, fungus, or wet rot except when hidden and resulting from accidental discharge of water or steam.",
+        "Losses from surface water, water below ground, or water damage excluded under specific provisions.",
+        "Losses related to business activities, property rented to others (except limited landlord furnishings), and certain motor vehicles, aircraft, and hovercraft.",
+        "Losses due to ordinance or law requirements for pollutants testing or cleanup."
+      ],
+      "conditions_notable": [
+        "Deductible applies to Section I losses as shown in the Declarations.",
+        "Coverage limits and special sub-limits apply to certain property categories.",
+        "Reasonable care must be used to maintain heat or shut off water to prevent freezing losses.",
+        "Coverage for collapse requires specific causes and excludes certain structures unless directly resulting from collapse.",
+        "Additional living expense and fair rental value coverages apply only for the shortest time needed to repair or relocate.",
+        "Certain coverages do not increase the overall policy limits but are additional insurance.",
+        "Claims related to credit cards and forgery have specific defense provisions and exclusions.",
+        "Loss assessment coverage excludes assessments by governmental bodies and certain perils like earthquake."
+      ],
+      "dispute_angles_possible": [
+        "Ambiguity in definitions of 'business' and related exclusions for property used primarily for business purposes.",
+        "Interpretation of 'reasonable care' in preventing freezing losses and its impact on coverage.",
+        "Application of special limits on categories of personal property and whether claimed losses fit within those categories.",
+        "Determination of whether a loss qualifies as a covered 'occurrence' or is excluded due to vacancy or construction status.",
+        "Scope of coverage for collapse and what constitutes a covered cause versus excluded conditions.",
+        "Whether mold, fungus, or wet rot losses are covered based on hidden damage and causation requirements.",
+        "Clarification on coverage for property removed from the residence premises and time limits applicable.",
+        "Potential conflicts between exclusions related to water damage and the exceptions for accidental discharge or overflow of water or steam.",
+        "Interpretation of coverage for trees felled by perils and the $1,000 aggregate limit with $500 per tree sublimit.",
+        "Extent of coverage for ordinance or law increased costs and exclusions related to pollutants."
+      ]
+    },
+    {
+      "section_name": "EXCLUSIONS",
+      "summary_overall": "This section outlines specific exclusions to liability coverages E (Personal Liability) and F (Medical Payments to Others) under the policy, detailing when motor vehicle, watercraft, aircraft, and hovercraft liabilities are not covered. It also excludes coverage for expected or intended injuries, business-related liabilities, professional services, certain premises, war, communicable diseases, abuse, and controlled substances. Additionally, it describes limited additional coverages such as claim expenses, first aid expenses, damage to property of others, and loss assessment with specific limits and conditions.",
+      "key_coverages": [
+        "Claim expenses including defense costs, bonds, and reasonable expenses incurred at insurer's request.",
+        "First aid expenses for others (not insureds) for bodily injury covered under the policy.",
+        "Up to $1,000 per occurrence for property damage to property of others caused by an insured, subject to exclusions.",
+        "Up to $1,000 for loss assessment charged to the insured by a property owners association for covered bodily injury or property damage or liability of directors/officers."
+      ],
+      "key_exclusions": [
+        "No coverage for motor vehicle liability if the vehicle is registered for public roads, used in races, rented, used for business (except motorized golf carts on golfing facilities), or not meeting specific off-road or storage conditions.",
+        "No coverage for watercraft liability if used in races, rented, carrying persons/cargo for charge, or used for business; limited coverage based on type, size, ownership, and horsepower of watercraft.",
+        "No coverage for aircraft or hovercraft liability.",
+        "No coverage for bodily injury or property damage expected or intended by an insured, except reasonable force to protect persons or property.",
+        "No coverage for business-related bodily injury or property damage except limited exceptions for occasional rental or part-time self-employed insureds under 21.",
+        "No coverage for bodily injury or property damage arising from premises not defined as insured location.",
+        "No coverage for war-related injuries or damages, communicable diseases transmitted by insured, sexual molestation, corporal punishment, abuse, or controlled substances use/sale/manufacture except legitimate prescription use.",
+        "No coverage for liability under contracts except those related to insured location ownership/use or where liability of others is assumed prior to occurrence.",
+        "No coverage for property damage to insured-owned or rented property, except fire, smoke, or explosion damage to rented property.",
+        "No coverage for bodily injury to persons eligible for workers' compensation or similar laws.",
+        "No coverage for bodily injury to insureds themselves or claims brought to share damages with insureds."
+      ],
+      "conditions_notable": [
+        "Motor vehicle liability exclusions do not apply to bodily injury to residence employees arising out of employment.",
+        "Certain watercraft coverage depends on horsepower, ownership, and whether the watercraft is rented or stored.",
+        "Outboard engines over 25 horsepower owned before policy inception must be declared or reported within 45 days to be covered.",
+        "Loss assessment coverage limited to $1,000 per occurrence and excludes assessments by governmental bodies.",
+        "Claim expenses coverage includes defense costs, bonds up to coverage limit, reasonable expenses including lost earnings up to $250/day, and post-judgment interest.",
+        "Damage to property of others excludes intentional damage by insureds age 13 or older and damage related to business or certain vehicle uses.",
+        "Coverage F excludes bodily injury to residence employees off insured location unless employment-related, and excludes injuries to persons regularly residing on insured location other than residence employees."
+      ],
+      "dispute_angles_possible": [
+        "Ambiguity in definitions of 'insured location' and applicability of motor vehicle exclusions to off-road vehicles or golf carts.",
+        "Potential conflicts or unclear thresholds regarding watercraft horsepower limits and ownership declarations for coverage eligibility.",
+        "Interpretation of 'business' exclusions, especially for part-time or occasional self-employed insureds under age 21 and occasional rental exceptions.",
+        "Scope and limits of loss assessment coverage, particularly regarding what constitutes a covered act by directors/officers and exclusions of governmental assessments.",
+        "Clarification on coverage for bodily injury to residence employees, especially relating to location and employment course requirements.",
+        "Potential ambiguity in exclusions related to communicable diseases and controlled substances, including legitimate prescription drug use.",
+        "Exclusions related to property damage to insured-owned or rented property and exceptions for fire, smoke, or explosion damage.",
+        "Whether exclusions for expected or intended injury apply in cases of differing degree or unintended victims."
+      ]
+    },
+    {
+      "section_name": "CONDITIONS",
+      "summary_overall": "This Conditions section outlines important rules about how the policy can be changed or canceled, how coverage broadening changes may apply, and the rights and duties of both the insurer and insured. It covers policy cancellation and nonrenewal procedures, assignment rules, subrogation rights, and provisions related to the death of an insured. It also specifies how waivers or changes to the policy must be made and the handling of premium refunds upon cancellation.",
+      "key_coverages": [],
+      "key_exclusions": [
+        "Liberalization Clause does not apply if changes include both broadenings and restrictions implemented through a general program revision.",
+        "Subrogation does not apply to Coverage F or Paragraph C. Damage To Property Of Others under Section II – Additional Coverages."
+      ],
+      "conditions_notable": [
+        "Policy changes that broaden coverage without extra premium automatically apply if implemented within 60 days before or during the policy period.",
+        "Waivers or changes to policy provisions must be in writing by the insurer to be valid.",
+        "Insurer may cancel for nonpayment with 10 days' notice; for material misrepresentation or substantial risk change with 30 days' notice; and for other reasons at anniversary with 30 days' notice if policy period is more than one year.",
+        "Insured may cancel at any time by returning the policy or notifying insurer in writing.",
+        "Premium refunds on cancellation are pro rata and must be made within a reasonable time if not included with cancellation notice.",
+        "Nonrenewal requires 30 days' written notice to insured.",
+        "Assignment of the policy requires insurer's written consent.",
+        "Subrogation rights may be waived in writing before loss; insurer may require assignment of recovery rights if payment is made.",
+        "Upon death of an insured, coverage extends to legal representatives and certain household members with respect to the deceased's property."
+      ],
+      "dispute_angles_possible": [
+        "Potential ambiguity in what constitutes a 'general program revision' that includes both broadenings and restrictions, affecting Liberalization Clause applicability.",
+        "Interpretation of 'material misrepresentation' and 'substantial change in risk' as grounds for cancellation after 60 days.",
+        "Timing and sufficiency of cancellation and nonrenewal notices, including proof of mailing requirements.",
+        "Scope and limits of subrogation rights and waivers, especially exclusions related to Coverage F and Damage To Property Of Others.",
+        "Requirements and validity of waivers or changes to policy provisions needing insurer's written consent.",
+        "Handling of premium refunds and what constitutes a 'reasonable time' for refund after cancellation.",
+        "Extent of coverage and insured status after death of a named insured, including rights of legal representatives and household members."
+      ]
+    }
+  ]
+}
