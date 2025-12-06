@@ -5,4 +5,9 @@ __pycache__/
 data/raw_policies/
 data/raw_denials/
 data/processed/*.report.md
+
+# Generated policy summaries and reports
+data/processed/*.json
+data/processed/*.report.md
+
 *.pyc
