@@ -1,10 +1,8 @@
 from typing import List
 from openai import OpenAI
 
-from .config import OPENAI_API_KEY, OPENAI_MODEL
+from .config import get_settings, ConfigError
 from .schemas import SectionSummary
-
-client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 SYSTEM_PROMPT = """You are an assistant that summarizes property insurance policy sections and denial letters for attorneys and public adjusters.
@@ -24,6 +22,7 @@ SECTION NAME: {section_name}
 
 TEXT:
 \"\"\"{section_text}\"\"\"
+
 
 Task:
 
@@ -46,11 +45,26 @@ Return your answer as strict JSON with this structure:
 """.strip()
 
 
+def _get_client_and_model() -> tuple[OpenAI, str]:
+    """
+    Build an OpenAI client and get the model name using lazy config access.
+    This is called at runtime so missing config fails when we actually use it,
+    not at import time.
+    """
+    settings = get_settings()
+    client = OpenAI(api_key=settings.openai_api_key)
+    return client, settings.openai_model
+
+
 def summarize_section(section_name: str, section_text: str) -> SectionSummary:
+    import json  # keep the dependency local for now
+
     user_prompt = build_user_prompt(section_name, section_text)
 
+    client, model_name = _get_client_and_model()
+
     response = client.chat.completions.create(
-        model=OPENAI_MODEL,
+        model=model_name,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -60,8 +74,6 @@ def summarize_section(section_name: str, section_text: str) -> SectionSummary:
     )
 
     raw = response.choices[0].message.content
-    import json
-
     data = json.loads(raw)
 
     return SectionSummary(
