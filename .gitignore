@@ -4,4 +4,5 @@ __pycache__/
 .env
 data/raw_policies/
 data/raw_denials/
+data/processed/*.report.md
 *.pyc
