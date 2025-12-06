@@ -7,6 +7,7 @@ from .pdf_loader import load_pdf_text
 from .sectioning import split_into_sections
 from .summarizer_frontier import summarize_section
 from .schemas import PolicySummary
+from .report_builder import build_and_save_markdown
 
 
 def summarize_policy(pdf_path: str, policy_id: str | None = None) -> PolicySummary:
@@ -60,6 +61,10 @@ def main():
         json.dump(summary.to_dict(), f, indent=2, ensure_ascii=False)
 
     print(f"[bold green]Saved summary to:[/bold green] {out_path}")
+
+    # NEW: build Markdown report next to the JSON
+    md_path = build_and_save_markdown(out_path)
+    print(f"[bold green]Saved Markdown report to:[/bold green] {md_path}")
 
 
 if __name__ == "__main__":
