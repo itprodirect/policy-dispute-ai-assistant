@@ -73,7 +73,36 @@ def _normalize_heading(raw: str) -> str:
     if key in HO3_HEADING_ALIASES:
         return HO3_HEADING_ALIASES[key]
 
-    # Pattern: SECTION I - EXCLUSIONS / CONDITIONS / PROPERTY COVERAGES, etc.
+    # HO3-specific cleanup for noisy PDF headings
+    # SAMPLE watermark
+    if key == "SAMPLE":
+        return "POLICY BODY (sample form text)"
+
+    # Coverage C heading often mangled by hyphenation
+    if key.startswith("COVERAGE C"):
+        return "COVERAGE C - PERSONAL PROPERTY"
+
+    # Coverage E/F exclusions headings
+    if key.startswith("COVERAGE E - DOES NOT APPLY TO"):
+        return "COVERAGE E - EXCLUSIONS (DOES NOT APPLY TO)"
+    if key.startswith("COVERAGE F - DOES NOT APPLY TO"):
+        return "COVERAGE F - EXCLUSIONS (DOES NOT APPLY TO)"
+
+    # Motor vehicle / watercraft liability definitions
+    if "MOTOR VEHICLE LIABILITY" in key:
+        return "COVERAGE F - MOTOR VEHICLE LIABILITY"
+    if "WATERCRAFT LIABILITY" in key:
+        return "COVERAGE F - WATERCRAFT LIABILITY"
+
+    # Governmental action on Coverage A/B/C
+    if "B OR C BY ORDER OF ANY GOVERN" in key:
+        return "SECTION I - GOVERNMENTAL ACTION (COVERAGE A/B/C)"
+
+    # Benefits to a person or organization (other insurance style clause)
+    if "BENEFITS A PERSON OR ORGANIZATION" in key:
+        return "SECTIONS I AND II - BENEFITS TO PERSON OR ORGANIZATION"
+
+    # Pattern: SECTION I/II ...
     m = SECTION_RE.match(key)
     if m:
         rest = _collapse_ws(m.group(2) or "").upper()
