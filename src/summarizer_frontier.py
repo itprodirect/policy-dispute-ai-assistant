@@ -1,7 +1,6 @@
-from typing import List
-from openai import OpenAI
+from __future__ import annotations
 
-from .config import get_settings, ConfigError
+from .llm_client import call_llm_json, LLMCallError
 from .schemas import SectionSummary
 
 
@@ -45,36 +44,16 @@ Return your answer as strict JSON with this structure:
 """.strip()
 
 
-def _get_client_and_model() -> tuple[OpenAI, str]:
-    """
-    Build an OpenAI client and get the model name using lazy config access.
-    This is called at runtime so missing config fails when we actually use it,
-    not at import time.
-    """
-    settings = get_settings()
-    client = OpenAI(api_key=settings.openai_api_key)
-    return client, settings.openai_model
-
-
 def summarize_section(section_name: str, section_text: str) -> SectionSummary:
-    import json  # keep the dependency local for now
-
     user_prompt = build_user_prompt(section_name, section_text)
 
-    client, model_name = _get_client_and_model()
-
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        response_format={"type": "json_object"},
+    data = call_llm_json(
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=user_prompt,
         temperature=0.2,
+        max_retries=3,
+        timeout=30.0,
     )
-
-    raw = response.choices[0].message.content
-    data = json.loads(raw)
 
     return SectionSummary(
         section_name=section_name,
