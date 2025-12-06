@@ -1,10 +1,7 @@
-from typing import List
-from openai import OpenAI
+from __future__ import annotations
 
-from .config import OPENAI_API_KEY, OPENAI_MODEL
+from .llm_client import call_llm_json, LLMCallError
 from .schemas import SectionSummary
-
-client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 SYSTEM_PROMPT = """You are an assistant that summarizes property insurance policy sections and denial letters for attorneys and public adjusters.
@@ -24,6 +21,7 @@ SECTION NAME: {section_name}
 
 TEXT:
 \"\"\"{section_text}\"\"\"
+
 
 Task:
 
@@ -49,20 +47,13 @@ Return your answer as strict JSON with this structure:
 def summarize_section(section_name: str, section_text: str) -> SectionSummary:
     user_prompt = build_user_prompt(section_name, section_text)
 
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ],
-        response_format={"type": "json_object"},
+    data = call_llm_json(
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=user_prompt,
         temperature=0.2,
+        max_retries=3,
+        timeout=30.0,
     )
-
-    raw = response.choices[0].message.content
-    import json
-
-    data = json.loads(raw)
 
     return SectionSummary(
         section_name=section_name,
