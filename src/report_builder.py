@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Iterable
 
 from rich import print
+from .schemas import DisputeReport
 
 
 @dataclass
@@ -227,6 +228,132 @@ def main() -> None:
             print(f"[red]Error building report for {json_path}:[/red] {e}")
 
     print(f"[bold]Done.[/bold] Built {count} report file(s).")
+
+
+def render_dispute_markdown(report: DisputeReport) -> str:
+    """
+    Render a DisputeReport (A–G structure) to Markdown.
+    """
+    lines: List[str] = []
+
+    # Header
+    title = "Policy dispute summary"
+    lines.append(f"# {title}")
+    lines.append("")
+
+    meta_lines: List[str] = []
+    if report.policy_id:
+        meta_lines.append(f"- Policy: `{report.policy_id}`")
+    if report.denial_id:
+        meta_lines.append(f"- Denial: `{report.denial_id}`")
+
+    if meta_lines:
+        lines.extend(meta_lines)
+        lines.append("")
+
+    lines.append(
+        "> **Framing:** This is an AI-generated analysis of policy language and a denial letter.\n"
+        "> It is *not* legal advice and does not create coverage, rights, or an attorney–client relationship."
+    )
+    lines.append("")
+
+    # A. Plain-English overview
+    lines.append("## A. Plain-English overview of the dispute")
+    lines.append("")
+    if report.plain_summary.strip():
+        lines.append(report.plain_summary.strip())
+    else:
+        lines.append("_No overview available._")
+    lines.append("")
+
+    # Helper for B/C/D
+    def _append_points_section(heading: str, points: List[Any]) -> None:
+        lines.append(heading)
+        lines.append("")
+        if not points:
+            lines.append("_None identified._")
+        else:
+            for p in points:
+                text = getattr(p, "text", "").strip()
+                if not text:
+                    continue
+                citation = getattr(p, "citation", None)
+                if citation:
+                    lines.append(f"- {text} ({citation})")
+                else:
+                    lines.append(f"- {text}")
+        lines.append("")
+
+    _append_points_section(
+        "## B. Coverage highlights that may support the insured",
+        report.coverage_highlights,
+    )
+    _append_points_section(
+        "## C. Key exclusions / limitations that may hurt the insured",
+        report.exclusions_limitations,
+    )
+    _append_points_section(
+        "## D. Denial reasons (as stated or implied by the insurer)",
+        report.denial_reasons,
+    )
+
+    # E. Dispute angles
+    lines.append("## E. Possible dispute angles to explore (not legal advice)")
+    lines.append("")
+    if not report.dispute_angles:
+        lines.append("_No dispute angles identified._")
+    else:
+        for angle in report.dispute_angles:
+            text = angle.text.strip()
+            if not text:
+                continue
+            if angle.citations:
+                cits = ", ".join(c for c in angle.citations if c.strip())
+                if cits:
+                    lines.append(f"- {text}  \n  _Citations: {cits}_")
+                else:
+                    lines.append(f"- {text}")
+            else:
+                lines.append(f"- {text}")
+    lines.append("")
+
+    # F. Missing info
+    lines.append("## F. Missing information / suggested next steps")
+    lines.append("")
+    if not report.missing_info:
+        lines.append("_No specific missing information identified._")
+    else:
+        for item in report.missing_info:
+            s = str(item).strip()
+            if s:
+                lines.append(f"- {s}")
+    lines.append("")
+
+    # G. Confidence & verify clauses
+    lines.append("## G. Confidence and clauses to verify")
+    lines.append("")
+    conf = report.confidence
+    if conf.score is not None:
+        lines.append(f"- **Confidence score (0–1):** {conf.score:.2f}")
+    if conf.notes.strip():
+        lines.append(f"- **Notes:** {conf.notes.strip()}")
+    if conf.verify_clauses:
+        lines.append("- **Clauses / sections to double-check:**")
+        for clause in conf.verify_clauses:
+            s = str(clause).strip()
+            if s:
+                lines.append(f"  - {s}")
+    if not any(
+        [
+            conf.score is not None,
+            conf.notes.strip(),
+            bool(conf.verify_clauses),
+        ]
+    ):
+        lines.append("_No explicit confidence metadata provided._")
+    lines.append("")
+
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":
