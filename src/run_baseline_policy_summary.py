@@ -8,6 +8,7 @@ from rich import print
 from .pdf_loader import load_pdf_text
 from .sectioning import split_into_sections
 from .schemas import SectionSummary  # for type hints only
+from .config import get_settings
 
 
 def classify_section_role(section_name: str, raw_text: str) -> str:
@@ -96,6 +97,18 @@ except ImportError:
 
 
 DATA_PROCESSED_DIR = Path("data/processed")
+SAFE_DATA_PROCESSED_DIR = Path("data/processed_safe")
+
+
+def _resolve_output_dir() -> Path:
+    """
+    Decide where to write processed outputs.
+
+    - Normal mode: data/processed/
+    - SAFE_MODE=true: data/processed_safe/
+    """
+    settings = get_settings()
+    return SAFE_DATA_PROCESSED_DIR if settings.safe_mode else DATA_PROCESSED_DIR
 
 
 def summarize_policy(pdf_path: Path) -> Path:
@@ -104,13 +117,18 @@ def summarize_policy(pdf_path: Path) -> Path:
     - load text
     - split into sections (dict: section_name -> section_text)
     - summarize each section via LLM
-    - write JSON to data/processed/<stem>.json
+    - write JSON to <output_dir>/<stem>.json
     """
     print(f"\n[bold]Loading policy:[/bold] {pdf_path}")
     text = load_pdf_text(pdf_path)
 
     print("Splitting into sections...")
     sections: Dict[str, str] = split_into_sections(text)
+
+    settings = get_settings()
+    persist_raw_text = settings.persist_raw_text
+    output_dir = _resolve_output_dir()
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     results: List[dict] = []
     for section_name, section_text in sections.items():
@@ -121,13 +139,17 @@ def summarize_policy(pdf_path: Path) -> Path:
         )
 
         section_dict = section_summary.to_dict()
-        section_dict["raw_text"] = section_text
+
+        # Only persist the full raw policy text when allowed by config.
+        if persist_raw_text:
+            section_dict["raw_text"] = section_text
+
         section_dict["section_role"] = classify_section_role(
-            section_name, section_text)
+            section_name, section_text
+        )
         results.append(section_dict)
 
-    DATA_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = DATA_PROCESSED_DIR / f"{pdf_path.stem}.json"
+    out_path = output_dir / f"{pdf_path.stem}.json"
 
     payload = {
         "policy_id": pdf_path.stem,
@@ -201,11 +223,15 @@ def main() -> None:
         print("[red]No input PDFs found. Nothing to do.[/red]")
         return
 
+    output_dir = _resolve_output_dir()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     print(f"[bold]Found {len(files)} PDF(s) to process.[/bold]")
+    print(f"[bold]Output directory:[/bold] {output_dir}")
 
     processed_count = 0
     for pdf_path in files:
-        out_path = DATA_PROCESSED_DIR / f"{pdf_path.stem}.json"
+        out_path = output_dir / f"{pdf_path.stem}.json"
         if args.skip_existing and out_path.exists():
             print(
                 f"[yellow]Skipping {pdf_path} because output already exists:[/yellow] {out_path}"
@@ -220,7 +246,8 @@ def main() -> None:
             print(f"[red]Error processing {pdf_path}:[/red] {e}")
 
     print(
-        f"\n[bold]Done.[/bold] Successfully processed {processed_count} file(s).")
+        f"\n[bold]Done.[/bold] Successfully processed {processed_count} file(s)."
+    )
 
 
 if __name__ == "__main__":

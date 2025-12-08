@@ -9,8 +9,21 @@ from rich import print
 from .summarizer_frontier import build_denial_aware_report
 from .schemas import DisputeReport
 from .report_builder import render_dispute_markdown
+from .config import get_settings
 
-DATA_PROCESSED_DIR = Path("data/processed")
+DEFAULT_DATA_PROCESSED_DIR = Path("data/processed")
+SAFE_DATA_PROCESSED_DIR = Path("data/processed_safe")
+
+
+def _resolve_output_dir() -> Path:
+    """
+    Decide where to write dispute outputs.
+
+    - Normal mode: data/processed/
+    - SAFE_MODE=true: data/processed_safe/
+    """
+    settings = get_settings()
+    return SAFE_DATA_PROCESSED_DIR if settings.safe_mode else DEFAULT_DATA_PROCESSED_DIR
 
 
 def parse_args() -> argparse.Namespace:
@@ -62,11 +75,12 @@ def main() -> None:
     dispute_report.policy_id = policy_id
     dispute_report.denial_id = denial_id
 
-    DATA_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    output_dir = _resolve_output_dir()
+    output_dir.mkdir(parents=True, exist_ok=True)
     base_name = f"{policy_id}__{denial_id}.dispute"
 
-    json_out = DATA_PROCESSED_DIR / f"{base_name}.json"
-    md_out = DATA_PROCESSED_DIR / f"{base_name}.md"
+    json_out = output_dir / f"{base_name}.json"
+    md_out = output_dir / f"{base_name}.md"
 
     json_out.write_text(
         json.dumps(dispute_report.to_dict(), indent=2, ensure_ascii=False),
