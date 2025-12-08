@@ -1,13 +1,66 @@
-.venv/
+# -------------------------
+# Python bytecode / caches
+# -------------------------
 __pycache__/
-.ipynb_checkpoints/
+*.py[cod]
+*.pyo
+*.pyd
+
+# -------------------------
+# Virtual environments
+# -------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# -------------------------
+# Environment / secrets
+# -------------------------
+# Local env files – can contain API keys, tokens, and privacy flags.
 .env
+.env.*
+
+# -------------------------
+# Local data (may contain PII)
+# -------------------------
+# Raw policy PDFs and denial letters – real-world inputs live here.
 data/raw_policies/
 data/raw_denials/
-data/processed/*.report.md
 
-# Generated policy summaries and reports
-data/processed/*.json
-data/processed/*.report.md
+# If you ever switch to a simpler name like data/denials/, this will already be safe:
+data/denials/
 
-*.pyc
+# Processed outputs (JSON + Markdown). These can contain PII in summaries.
+data/processed/
+data/processed_safe/
+
+# Optional scratch / temp data if you use it
+data/tmp/
+data/cache/
+
+# -------------------------
+# Logs / debug artifacts
+# -------------------------
+*.log
+logs/
+debug/
+.tmp/
+
+# -------------------------
+# Jupyter / notebooks noise
+# -------------------------
+.ipynb_checkpoints/
+
+# -------------------------
+# Editor / IDE files
+# -------------------------
+.vscode/
+.idea/
+*.code-workspace
+
+# -------------------------
+# OS junk
+# -------------------------
+.DS_Store
+Thumbs.db
