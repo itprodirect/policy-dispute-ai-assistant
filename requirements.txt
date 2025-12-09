@@ -3,3 +3,4 @@ pypdf
 tiktoken          # optional but helpful if you want token-aware chunking
 openai           # new SDK style; adjust version if needed
 rich             # nice CLI output (optional but useful)
+streamlit
