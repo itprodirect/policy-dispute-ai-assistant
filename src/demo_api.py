@@ -6,11 +6,21 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from .run_baseline_policy_summary import summarize_policy
-from .report_builder import build_policy_report, render_markdown
+from .report_builder import (
+    build_policy_report,
+    render_markdown,
+    render_dispute_markdown,
+)
+from .summarizer_frontier import build_denial_aware_report
 from .config import get_settings
 
 
 UPLOAD_DIR = Path("data/uploads")
+
+# Where dispute reports (JSON + Markdown) are written.
+# Mirrors run_denial_summary.py
+DEFAULT_DATA_PROCESSED_DIR = Path("data/processed")
+SAFE_DATA_PROCESSED_DIR = Path("data/processed_safe")
 
 
 def _save_uploaded_policy(file_bytes: bytes, original_name: str) -> Path:
@@ -38,6 +48,17 @@ def _strip_raw_text(sections: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         s_copy.pop("raw_text", None)
         cleaned.append(s_copy)
     return cleaned
+
+
+def _resolve_dispute_output_dir() -> Path:
+    """
+    Decide where to write dispute outputs (JSON + Markdown).
+
+    - Normal mode: data/processed/
+    - SAFE_MODE=true: data/processed_safe/
+    """
+    settings = get_settings()
+    return SAFE_DATA_PROCESSED_DIR if settings.safe_mode else DEFAULT_DATA_PROCESSED_DIR
 
 
 def run_policy_analysis(
@@ -92,4 +113,87 @@ def run_policy_analysis(
             "persist_raw_text": settings.persist_raw_text,
         },
         "markdown": markdown_text,
+    }
+
+
+def run_dispute_analysis(
+    policy_summary_json_path: str | Path,
+    denial_text: str,
+    *,
+    denial_id: str | None = None,
+) -> Dict[str, Any]:
+    """
+    Build a denial-aware A–G dispute report from an existing policy summary JSON
+    and a denial letter text blob.
+
+    This is the programmatic equivalent of run_denial_summary.py for the frontend.
+
+    Args:
+        policy_summary_json_path:
+            Path to the policy summary JSON (output of run_baseline_policy_summary.py
+            / summarize_policy()).
+        denial_text:
+            Plain-text content of the denial letter (v0: already extracted text).
+        denial_id:
+            Optional identifier for the denial (e.g. claim number or filename stem).
+            If omitted, a timestamp-based ID is generated.
+
+    Returns:
+        JSON-serializable dict including:
+          - policy_id, denial_id
+          - dispute_report (nested A–G structure as dict)
+          - markdown (rendered dispute report)
+          - artifacts (paths to saved JSON/Markdown, plus safe_mode flag)
+    """
+    settings = get_settings()
+
+    policy_path = Path(policy_summary_json_path)
+    if not policy_path.is_file():
+        raise FileNotFoundError(
+            f"Policy summary JSON not found: {policy_path}")
+
+    policy_payload = json.loads(policy_path.read_text(encoding="utf-8"))
+
+    # Call LLM-based builder (policy summary + denial text -> DisputeReport dataclass)
+    dispute_report = build_denial_aware_report(policy_payload, denial_text)
+
+    # Attach simple metadata (same pattern as run_denial_summary.py)
+    policy_id = policy_payload.get("policy_id") or policy_path.stem
+    if denial_id is None:
+        # Fallback: timestamped ID if UI doesn’t supply something better
+        denial_id = f"denial_{int(time.time())}"
+
+    dispute_report.policy_id = policy_id
+    dispute_report.denial_id = denial_id
+
+    # Decide where to write outputs
+    output_dir = _resolve_dispute_output_dir()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    base_name = f"{policy_id}__{denial_id}.dispute"
+
+    json_out = output_dir / f"{base_name}.json"
+    md_out = output_dir / f"{base_name}.md"
+
+    # Persist JSON version of the dispute report
+    dispute_dict = dispute_report.to_dict()
+    json_out.write_text(
+        json.dumps(dispute_dict, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+    # Render and persist Markdown
+    md_text = render_dispute_markdown(dispute_report)
+    md_out.write_text(md_text, encoding="utf-8")
+
+    return {
+        "policy_id": policy_id,
+        "denial_id": denial_id,
+        "dispute_report": dispute_dict,
+        "markdown": md_text,
+        "artifacts": {
+            "dispute_json": str(json_out),
+            "dispute_markdown": str(md_out),
+            "policy_summary_json": str(policy_path),
+            "safe_mode": settings.safe_mode,
+        },
     }
