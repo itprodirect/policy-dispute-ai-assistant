@@ -1,344 +1,530 @@
+from __future__ import annotations
+
 import importlib
+import json
 import sys
-from io import BytesIO
+import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 import streamlit as st
-from pypdf import PdfReader
 
 # Ensure project root is on sys.path so we can import "src.*"
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Import demo_api dynamically so import sorters don't reorder it
 demo_api = importlib.import_module("src.demo_api")
+pdf_loader = importlib.import_module("src.pdf_loader")
+summarizer_frontier = importlib.import_module("src.summarizer_frontier")
+report_builder = importlib.import_module("src.report_builder")
+schemas = importlib.import_module("src.schemas")
+
 run_policy_analysis = demo_api.run_policy_analysis
-run_dispute_analysis = demo_api.run_dispute_analysis
+load_pdf_text = pdf_loader.load_pdf_text
+build_denial_aware_report = summarizer_frontier.build_denial_aware_report
+render_dispute_markdown = report_builder.render_dispute_markdown
+DisputeReport = schemas.DisputeReport
 
 
-def _render_bullet_list(items: List[str]) -> None:
-    """Render a simple list of strings as markdown bullets."""
-    if not items:
-        st.caption("None noted.")
+UPLOAD_DIR = Path("data/uploads")
+SESSION_KEY_POLICY = "policy_result"
+SESSION_KEY_DISPUTE = "dispute_result"
+
+
+def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
+    """
+    Save the uploaded denial letter PDF under data/uploads/ with a timestamped name.
+    """
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    stem = (claim_nickname or Path(uploaded_file.name).stem or "denial").strip()
+    safe_stem = stem.replace(" ", "_")
+    ts = int(time.time())
+    filename = f"{safe_stem}__denial__{ts}.pdf"
+
+    path = UPLOAD_DIR / filename
+    path.write_bytes(uploaded_file.getvalue())
+    return path
+
+
+def _render_points(points: List[Dict[str, Any]] | None, empty_message: str) -> None:
+    points = points or []
+    if not points:
+        st.write(empty_message)
         return
-    for item in items:
-        st.markdown(f"- {item}")
+
+    for p in points:
+        if isinstance(p, dict):
+            text = str(p.get("text", "")).strip()
+            citation = str(p.get("citation", "") or "").strip()
+        else:
+            text = str(p).strip()
+            citation = ""
+
+        if not text:
+            continue
+
+        if citation:
+            st.markdown(f"- {text}  \n  _Citation: {citation}_")
+        else:
+            st.markdown(f"- {text}")
 
 
-def _render_section_summary(section: Dict[str, Any]) -> None:
-    """Claim-facing view of a single policy section."""
-    st.write(
-        section.get("summary_overall", "").strip()
-        or "_No plain-English summary available._"
+def _render_dispute_angles(angles: List[Dict[str, Any]] | None) -> None:
+    angles = angles or []
+    if not angles:
+        st.write("No dispute angles identified.")
+        return
+
+    for a in angles:
+        if isinstance(a, dict):
+            text = str(a.get("text", "")).strip()
+            raw_cits = a.get("citations") or []
+            cits: List[str] = []
+            if isinstance(raw_cits, list):
+                for c in raw_cits:
+                    s = str(c).strip()
+                    if s:
+                        cits.append(s)
+        else:
+            text = str(a).strip()
+            cits = []
+
+        if not text:
+            continue
+
+        if cits:
+            joined = ", ".join(cits)
+            st.markdown(f"- {text}  \n  _Citations: {joined}_")
+        else:
+            st.markdown(f"- {text}")
+
+
+def _render_hero(
+    dispute_report: Dict[str, Any],
+    dispute_markdown: str,
+    policy_label: str,
+    denial_label: str,
+) -> None:
+    st.subheader("Dispute overview")
+
+    col_left, col_right = st.columns([2, 1])
+
+    with col_left:
+        plain_summary = str(dispute_report.get(
+            "plain_summary", "") or "").strip()
+        if plain_summary:
+            st.markdown("##### A. Plain-language summary")
+            st.write(plain_summary)
+        else:
+            st.write("No plain-language summary available from the model.")
+
+        # try to pull 2–3 “key takeaways” from B/E
+        takeaways: List[str] = []
+        for pt in dispute_report.get("coverage_highlights", []) or []:
+            text = ""
+            if isinstance(pt, dict):
+                text = str(pt.get("text", "")).strip()
+            else:
+                text = str(pt).strip()
+            if text:
+                takeaways.append(text)
+            if len(takeaways) >= 3:
+                break
+
+        if len(takeaways) < 3:
+            for angle in dispute_report.get("dispute_angles", []) or []:
+                text = ""
+                if isinstance(angle, dict):
+                    text = str(angle.get("text", "")).strip()
+                else:
+                    text = str(angle).strip()
+                if text:
+                    takeaways.append(text)
+                if len(takeaways) >= 3:
+                    break
+
+        if takeaways:
+            st.markdown("##### Key takeaways")
+            for t in takeaways[:3]:
+                st.markdown(f"- {t}")
+
+    with col_right:
+        st.markdown("##### Actions")
+        st.caption("Download or copy the full A–G dispute write-up.")
+        st.download_button(
+            "Download dispute report (Markdown)",
+            data=dispute_markdown,
+            file_name=f"{policy_label}__{denial_label}.dispute.md",
+            mime="text/markdown",
+        )
+        st.caption(
+            "Paste into Word/Docs as a starting draft. "
+            "Always compare against the actual policy & denial."
+        )
+
+
+def _render_dispute_tabs(dispute_report: Dict[str, Any]) -> None:
+    tab_ag, tab_policy_view, tab_denial_view, tab_debug = st.tabs(
+        [
+            "Dispute summary (A–G)",
+            "Policy highlights",
+            "Denial reasons",
+            "Confidence / debug",
+        ]
     )
 
-    st.markdown("**Key coverages**")
-    _render_bullet_list(section.get("key_coverages", []))
+    # A–G
+    with tab_ag:
+        st.markdown("### A–G dispute structure")
 
-    st.markdown("**Key exclusions / limitations**")
-    _render_bullet_list(section.get("key_exclusions", []))
+        with st.expander("A – Plain-language overview", expanded=True):
+            plain_summary = str(dispute_report.get(
+                "plain_summary", "") or "").strip()
+            if plain_summary:
+                st.write(plain_summary)
+            else:
+                st.write("No overview available.")
 
-    st.markdown("**Notable conditions / duties**")
-    _render_bullet_list(section.get("conditions_notable", []))
+        with st.expander("B – Coverage highlights that may support the insured"):
+            _render_points(
+                dispute_report.get("coverage_highlights"),
+                "No coverage highlights identified.",
+            )
 
-    st.markdown("**Potential dispute angles**")
-    _render_bullet_list(section.get("potential_dispute_angles", []))
+        with st.expander("C – Key exclusions / limitations that may hurt the insured"):
+            _render_points(
+                dispute_report.get("exclusions_limitations"),
+                "No exclusions / limitations identified.",
+            )
+
+        with st.expander("D – Denial reasons & cited clauses"):
+            _render_points(
+                dispute_report.get("denial_reasons"),
+                "No denial reasons extracted from the letter.",
+            )
+
+        with st.expander("E – Possible dispute angles to explore"):
+            _render_dispute_angles(dispute_report.get("dispute_angles"))
+
+        with st.expander("F – Missing information / suggested next steps"):
+            missing = dispute_report.get("missing_info") or []
+            if not missing:
+                st.write("No specific missing information identified.")
+            else:
+                for item in missing:
+                    s = str(item).strip()
+                    if s:
+                        st.markdown(f"- {s}")
+
+        with st.expander("G – Confidence & clauses to double-check"):
+            conf = dispute_report.get("confidence") or {}
+            score = conf.get("score")
+            notes = str(conf.get("notes", "") or "").strip()
+            verify_clauses = conf.get("verify_clauses") or []
+
+            if score is not None:
+                st.write(f"**Confidence score (0–1):** {float(score):.2f}")
+            if notes:
+                st.write(f"**Notes:** {notes}")
+            if verify_clauses:
+                st.markdown("**Clauses / sections to double-check:**")
+                for c in verify_clauses:
+                    s = str(c).strip()
+                    if s:
+                        st.markdown(f"- {s}")
+            if (
+                score is None
+                and not notes
+                and not (verify_clauses or [])
+            ):
+                st.write("No explicit confidence metadata provided by the model.")
+
+    # Policy slice
+    with tab_policy_view:
+        st.markdown("### Policy highlights from A–G report")
+        st.caption(
+            "These are pulled from the dispute report (not the full policy). "
+            "Use them as a quick checklist, then confirm against the actual wording."
+        )
+
+        st.markdown("#### Coverage highlights (B)")
+        _render_points(
+            dispute_report.get("coverage_highlights"),
+            "No coverage highlights identified.",
+        )
+
+        st.markdown("#### Exclusions / limitations (C)")
+        _render_points(
+            dispute_report.get("exclusions_limitations"),
+            "No exclusions / limitations identified.",
+        )
+
+    # Denial slice
+    with tab_denial_view:
+        st.markdown("### Denial reasons & angles")
+
+        st.markdown("#### Denial reasons (D)")
+        _render_points(
+            dispute_report.get("denial_reasons"),
+            "No denial reasons extracted from the letter.",
+        )
+
+        st.markdown("#### Dispute angles (E)")
+        _render_dispute_angles(dispute_report.get("dispute_angles"))
+
+    # Minimal JSON view
+    with tab_debug:
+        st.markdown("### Raw A–G JSON (debug view)")
+        st.json(dispute_report)
 
 
-def _extract_denial_text(uploaded_file) -> str:
-    """Convert an uploaded denial file (txt/pdf) into plain text."""
-    if uploaded_file is None:
-        raise ValueError("No denial file provided")
+def _render_policy_breakdown(policy_result: Dict[str, Any]) -> None:
+    st.markdown("### Policy breakdown (section summaries)")
+    stats = policy_result.get("stats", {}) or {}
 
-    name = uploaded_file.name or "denial"
-    suffix = name.lower().rsplit(".", 1)[-1]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Total sections", stats.get("num_sections", 0))
+    c2.metric("UNKNOWN sections", stats.get("num_unknown_sections", 0))
+    c3.metric("Meta sections", stats.get("num_meta_sections", 0))
 
-    raw = uploaded_file.getvalue()
+    st.caption("Substantive sections only (no raw policy text).")
 
-    if suffix == "txt":
-        return raw.decode("utf-8", errors="ignore")
+    for s in policy_result.get("sections_substantive", []) or []:
+        section_title = s.get("section_name", "Section")
+        with st.expander(section_title, expanded=False):
+            summary = s.get("summary_overall", "")
+            if summary:
+                st.write(summary)
 
-    if suffix == "pdf":
-        reader = PdfReader(BytesIO(raw))
-        texts: List[str] = []
-        for page in reader.pages:
-            texts.append(page.extract_text() or "")
-        return "\n\n".join(texts)
+            st.markdown("**Key coverages**")
+            st.write(s.get("key_coverages", []))
 
-    raise ValueError(f"Unsupported denial file type: {suffix}")
+            st.markdown("**Key exclusions / limitations**")
+            st.write(s.get("key_exclusions", []))
+
+            st.markdown("**Notable conditions / duties**")
+            st.write(s.get("conditions_notable", []))
+
+            st.markdown("**Potential dispute angles**")
+            st.write(s.get("dispute_angles_possible", []))
+
+    meta_sections = policy_result.get("sections_meta", []) or []
+    if meta_sections:
+        with st.expander("Meta / regulatory sections", expanded=False):
+            st.caption(
+                "Likely non-operative material (disclaimers, OIR filings, etc.).")
+            st.write(meta_sections)
+
+
+def _run_full_analysis(
+    *,
+    claim_nickname: str,
+    state: str,
+    policy_file,
+    denial_file,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """
+    End-to-end:
+      - run policy analysis (existing demo_api helper)
+      - save + OCR denial PDF to text
+      - call build_denial_aware_report
+      - render Markdown dispute report
+    """
+    progress_bar = st.progress(0)
+    status = st.empty()
+
+    # Step 1: policy
+    status.write("Step 1/4 – Analyzing policy PDF…")
+    progress_bar.progress(20)
+
+    policy_result = run_policy_analysis(
+        policy_file.getvalue(),
+        policy_file.name,
+    )
+
+    # Step 2: denial text
+    status.write("Step 2/4 – Saving and reading denial letter PDF…")
+    progress_bar.progress(45)
+
+    denial_path = _save_denial_pdf(denial_file, claim_nickname or None)
+    denial_text = load_pdf_text(denial_path)
+
+    # Step 3: A–G dispute report
+    status.write(
+        "Step 3/4 – Building A–G dispute report from policy + denial…")
+    progress_bar.progress(75)
+
+    summary_json_path = Path(policy_result.get(
+        "artifacts", {}).get("summary_json", ""))
+    if not summary_json_path.is_file():
+        raise RuntimeError(
+            f"Policy summary JSON not found at {summary_json_path!s}")
+
+    policy_summary_payload = json.loads(
+        summary_json_path.read_text(encoding="utf-8"))
+
+    dispute_obj: DisputeReport = build_denial_aware_report(
+        policy_summary_payload,
+        denial_text,
+    )
+
+    # attach IDs for nicer Markdown & UI labels
+    dispute_obj.policy_id = (
+        policy_result.get("policy_name")
+        or Path(policy_result.get("source_path") or "").stem
+        or "policy"
+    )
+    dispute_obj.denial_id = Path(denial_path).stem or "denial"
+
+    markdown = render_dispute_markdown(dispute_obj)
+    dispute_report_dict = dispute_obj.to_dict()
+
+    progress_bar.progress(100)
+    status.write("Step 4/4 – Done.")
+
+    dispute_result: Dict[str, Any] = {
+        "policy_id": dispute_obj.policy_id,
+        "denial_id": dispute_obj.denial_id,
+        "dispute_report": dispute_report_dict,
+        "markdown": markdown,
+        "artifacts": {
+            "summary_json": str(summary_json_path),
+            "denial_pdf": str(denial_path),
+        },
+    }
+
+    return policy_result, dispute_result
+
+
+def _render_intake_form() -> None:
+    st.header("New claim")
+
+    st.caption(
+        "Upload a homeowners policy and denial letter as PDFs. "
+        "We’ll generate a dispute-focused A–G summary for quick triage. "
+        "Nothing here is legal advice."
+    )
+
+    with st.form("claim_intake"):
+        col1, col2 = st.columns(2)
+        with col1:
+            claim_nickname = st.text_input(
+                "Claim nickname (optional)",
+                help="Short label like 'Smith wind loss' to help you remember the case.",
+            )
+        with col2:
+            state = st.text_input(
+                "State (optional)",
+                help="Two-letter state code like FL or TX. Used only for context today.",
+                max_chars=10,
+            )
+
+        policy_file = st.file_uploader(
+            "Policy PDF",
+            type=["pdf"],
+            key="policy_pdf",
+            help="The full HO3 (or similar) policy as a single PDF.",
+        )
+        denial_file = st.file_uploader(
+            "Denial letter PDF",
+            type=["pdf"],
+            key="denial_pdf",
+            help="The carrier's denial letter as a PDF.",
+        )
+
+        submitted = st.form_submit_button("Analyze claim", type="primary")
+
+    if not submitted:
+        return
+
+    errors: List[str] = []
+    if policy_file is None:
+        errors.append("Policy PDF is required.")
+    if denial_file is None:
+        errors.append("Denial letter PDF is required.")
+
+    if errors:
+        for err in errors:
+            st.error(err)
+        st.stop()
+
+    try:
+        policy_result, dispute_result = _run_full_analysis(
+            claim_nickname=claim_nickname.strip(),
+            state=state.strip(),
+            policy_file=policy_file,
+            denial_file=denial_file,
+        )
+    except Exception as e:
+        st.error(f"Analysis failed: {e}")
+        st.stop()
+
+    st.session_state[SESSION_KEY_POLICY] = policy_result
+    st.session_state[SESSION_KEY_DISPUTE] = dispute_result
+
+    st.success("Analysis complete.")
+
+
+def _render_results_section() -> None:
+    if SESSION_KEY_DISPUTE not in st.session_state:
+        st.info(
+            "Upload a policy PDF and denial letter above to generate a dispute report.")
+        return
+
+    policy_result: Dict[str, Any] = st.session_state[SESSION_KEY_POLICY]
+    dispute_result: Dict[str, Any] = st.session_state[SESSION_KEY_DISPUTE]
+    dispute_report = dispute_result.get("dispute_report", {}) or {}
+
+    st.divider()
+    st.header("Results")
+
+    policy_label = str(dispute_result.get("policy_id") or "policy")
+    denial_label = str(dispute_result.get("denial_id") or "denial")
+
+    _render_hero(
+        dispute_report,
+        dispute_result.get("markdown", "") or "",
+        policy_label,
+        denial_label,
+    )
+
+    st.markdown("### Detailed dispute views")
+    _render_dispute_tabs(dispute_report)
+
+    st.markdown("### Full policy breakdown (optional)")
+    _render_policy_breakdown(policy_result)
+
+    with st.expander("Artifacts / advanced debug", expanded=False):
+        st.json(
+            {
+                "policy_artifacts": policy_result.get("artifacts", {}),
+                "dispute_artifacts": dispute_result.get("artifacts", {}),
+            }
+        )
 
 
 def main() -> None:
     st.set_page_config(
-        page_title="Policy Dispute AI – Demo",
+        page_title="Policy Dispute AI – Claim A–G Demo",
         layout="wide",
-        initial_sidebar_state="collapsed",
     )
 
-    st.title("Policy Dispute AI – v0 Frontend")
-    st.write(
-        "This internal demo ingests a homeowners policy PDF and produces a structured, dispute-focused summary."
-    )
-    st.caption(
-        "Important: This is an AI-generated summary of policy language only. "
-        "It is not legal advice and does not create coverage, rights, or an attorney–client relationship."
-    )
+    st.title("Policy Dispute AI – Claim A–G Demo")
 
-    # Session state setup
-    if "policy_result" not in st.session_state:
-        st.session_state["policy_result"] = None
-    if "policy_error" not in st.session_state:
-        st.session_state["policy_error"] = None
-    if "dispute_result" not in st.session_state:
-        st.session_state["dispute_result"] = None
-    if "dispute_error" not in st.session_state:
-        st.session_state["dispute_error"] = None
+    st.markdown(
+        """
+This internal demo ingests a homeowners policy PDF **and** a denial letter PDF and
+produces a structured A–G dispute summary.
 
-    st.markdown("---")
-
-    # --- Step 1: Policy upload + analysis ---
-    st.subheader("Step 1 – Upload policy and run analysis")
-
-    uploaded_policy = st.file_uploader(
-        "Upload a policy PDF",
-        type=["pdf"],
-        help="HO3 policy PDF, up to ~200MB.",
+> **Important:** This is an AI-generated analysis of policy language and a denial letter.  
+> It is **not** legal advice and does not create coverage, rights, or an attorney–client relationship.
+"""
     )
 
-    if uploaded_policy is not None:
-        st.info(f"Selected file: **{uploaded_policy.name}**")
-
-    run_policy_col, _ = st.columns([1, 4])
-    with run_policy_col:
-        run_policy_clicked = st.button(
-            "Run analysis",
-            type="primary",
-            disabled=uploaded_policy is None,
-            key="run_policy",
-        )
-
-    if run_policy_clicked and uploaded_policy is not None:
-        st.session_state["policy_error"] = None
-        st.session_state["policy_result"] = None
-        st.session_state["dispute_result"] = None  # reset downstream state
-
-        with st.spinner("Analyzing policy… this can take a bit."):
-            try:
-                result = run_policy_analysis(
-                    uploaded_policy.getvalue(), uploaded_policy.name
-                )
-            except Exception as exc:  # noqa: BLE001
-                st.session_state["policy_error"] = str(exc)
-            else:
-                st.session_state["policy_result"] = result
-
-    if st.session_state["policy_error"]:
-        st.error(f"Policy analysis failed: {st.session_state['policy_error']}")
-
-    result = st.session_state["policy_result"]
-
-    if result:
-        st.success("Analysis complete.")
-
-        stats = result.get("stats", {})
-        cols = st.columns(3)
-        cols[0].metric("Total sections", stats.get("num_sections", 0))
-        cols[1].metric("UNKNOWN sections", stats.get(
-            "num_unknown_sections", 0))
-        cols[2].metric("Meta sections", stats.get("num_meta_sections", 0))
-
-        st.markdown("### Views")
-
-        (
-            tab_summary,
-            tab_dev,
-            tab_markdown,
-            tab_artifacts,
-            tab_dispute,
-        ) = st.tabs(
-            [
-                "Summary (claim-facing)",
-                "Sections (dev view)",
-                "Markdown report",
-                "Artifacts / debug",
-                "Dispute report (policy + denial)",
-            ]
-        )
-
-        # Claim-facing summary view
-        with tab_summary:
-            st.caption("Substantive sections only (no raw text).")
-
-            for section in result.get("sections_substantive", []):
-                name = section.get("section_name") or "Unnamed section"
-                with st.expander(name, expanded=False):
-                    _render_section_summary(section)
-
-        # Developer view – raw section payloads
-        with tab_dev:
-            st.caption("Raw section payloads as returned from the backend.")
-            st.json(
-                {
-                    "substantive": result.get("sections_substantive", []),
-                    "meta": result.get("sections_meta", []),
-                }
-            )
-
-        # Markdown report for policy-only analysis
-        with tab_markdown:
-            st.caption("Full Markdown report generated from PolicyReport.")
-            st.code(result.get("markdown", ""), language="markdown")
-
-        # Artifact paths and config flags
-        with tab_artifacts:
-            st.caption("Paths to artifacts on disk + privacy flags.")
-            st.json(result.get("artifacts", {}))
-
-        # --- Step 2: Dispute report (policy + denial) ---
-        with tab_dispute:
-            st.caption(
-                "Combine the policy summary with a denial letter to generate an A–G style dispute report. "
-                "Run Step 1 first, then upload a denial letter here."
-            )
-
-            denial_file = st.file_uploader(
-                "Upload denial letter (.txt or .pdf)",
-                type=["txt", "pdf"],
-                key="denial_file",
-                help="For v0, plain text or simple PDF denial letters work best.",
-            )
-
-            run_dispute_clicked = st.button(
-                "Run dispute analysis",
-                type="primary",
-                disabled=denial_file is None,
-                key="run_dispute",
-            )
-
-            if run_dispute_clicked and denial_file is not None:
-                st.session_state["dispute_error"] = None
-                st.session_state["dispute_result"] = None
-
-                artifacts = result.get("artifacts", {})
-                summary_json_path = artifacts.get("summary_json")
-
-                if not summary_json_path:
-                    st.session_state[
-                        "dispute_error"
-                    ] = "Missing summary_json path in artifacts – cannot run dispute analysis."
-                else:
-                    try:
-                        denial_text = _extract_denial_text(denial_file)
-                        dispute = run_dispute_analysis(
-                            policy_summary_json_path=summary_json_path,
-                            denial_text=denial_text,
-                            denial_id=Path(denial_file.name).stem,
-                        )
-                    except Exception as exc:  # noqa: BLE001
-                        st.session_state["dispute_error"] = str(exc)
-                    else:
-                        st.session_state["dispute_result"] = dispute
-
-            if st.session_state["dispute_error"]:
-                st.error(
-                    f"Dispute analysis failed: {st.session_state['dispute_error']}")
-
-            dispute_result = st.session_state["dispute_result"]
-            if dispute_result:
-                report = dispute_result.get("dispute_report", {}) or {}
-
-                st.success("Dispute report generated.")
-
-                st.markdown("#### A. Plain-English overview")
-                st.write(
-                    report.get("plain_summary", "").strip()
-                    or "_No overview provided._"
-                )
-
-                st.markdown("#### B. Coverage highlights supporting the claim")
-                highlights = report.get("coverage_highlights", [])
-                if highlights:
-                    for pt in highlights:
-                        text = pt.get("text", "")
-                        citation = pt.get("citation")
-                        if citation:
-                            st.markdown(f"- {text} _(source: {citation})_")
-                        else:
-                            st.markdown(f"- {text}")
-                else:
-                    st.caption("No specific coverage highlights identified.")
-
-                st.markdown("#### C. Key exclusions / limitations")
-                exclusions = report.get("exclusions_limitations", [])
-                if exclusions:
-                    for pt in exclusions:
-                        text = pt.get("text", "")
-                        citation = pt.get("citation")
-                        if citation:
-                            st.markdown(f"- {text} _(source: {citation})_")
-                        else:
-                            st.markdown(f"- {text}")
-                else:
-                    st.caption(
-                        "No specific exclusions/limitations highlighted.")
-
-                st.markdown("#### D. Stated reasons for denial")
-                denial_reasons = report.get("denial_reasons", [])
-                if denial_reasons:
-                    for pt in denial_reasons:
-                        text = pt.get("text", "")
-                        citation = pt.get("citation")
-                        if citation:
-                            st.markdown(f"- {text} _(source: {citation})_")
-                        else:
-                            st.markdown(f"- {text}")
-                else:
-                    st.caption("No explicit denial reasons extracted.")
-
-                st.markdown("#### E. Potential dispute angles")
-                angles = report.get("dispute_angles", [])
-                if angles:
-                    for angle in angles:
-                        text = angle.get("text", "")
-                        cites = angle.get("citations", []) or []
-                        if cites:
-                            st.markdown(
-                                f"- {text}  \n  _Citations:_ {', '.join(cites)}"
-                            )
-                        else:
-                            st.markdown(f"- {text}")
-                else:
-                    st.caption("No specific dispute angles identified.")
-
-                st.markdown(
-                    "#### F. Missing information / suggested follow-up")
-                missing = report.get("missing_info", [])
-                _render_bullet_list(missing)
-
-                st.markdown("#### G. Confidence / verification notes")
-                conf = report.get("confidence", {}) or {}
-                score = conf.get("score")
-                notes = conf.get("notes", "").strip()
-                verify_clauses = conf.get("verify_clauses", []) or []
-
-                if score is not None:
-                    st.write(
-                        f"Estimated confidence score: **{score:.2f}** (0–1, heuristic only)."
-                    )
-                if notes:
-                    st.write(notes)
-                if verify_clauses:
-                    st.markdown("**Clauses / documents to verify:**")
-                    _render_bullet_list(verify_clauses)
-
-                with st.expander("Raw dispute JSON (debug)"):
-                    st.json(dispute_result.get("dispute_report", {}))
-
-                with st.expander("Markdown dispute report (debug)"):
-                    st.code(dispute_result.get(
-                        "markdown", ""), language="markdown")
+    _render_intake_form()
+    _render_results_section()
 
 
 if __name__ == "__main__":
