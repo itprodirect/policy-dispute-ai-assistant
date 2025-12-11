@@ -1,99 +1,103 @@
 # Policy Dispute AI Assistant
 
-AI assistant for turning **homeowners insurance policies (HO3)** and **claim denial letters** into **dispute‑focused reports**.
+AI assistant for turning homeowners policies and denial letters into dispute‑focused summaries (A–G structure) for public adjusters and attorneys.
 
-- Designed for **public adjusters, coverage counsel, and their teams**
-- Built to **surface leverage points and blind spots**, not to replace human judgment
-- **Not legal advice** and not a coverage determination
+> **Status:** Internal prototype / demo
+>
+> **Frontend:** Streamlit v1 UX (`frontend/app.py`)
+>
+> **Backend:** Python pipelines in `src/` for policy + denial analysis using OpenAI models
+
+This repo is **not** a legal product. It is an educational / research tool for exploring how LLMs can help with property‑claim disputes.
 
 ---
 
-## What this tool does
-
-### 1. Policy‑only summary (baseline)
-
-Feed it one or more HO3 policy PDFs and it will:
-
-- Split each policy into logical sections (Definitions, Coverages, Exclusions, Conditions, endorsements, etc.)
-- Summarize each section in plain English
-- Extract:
-
-  - Key coverages
-  - Key exclusions / limitations
-  - Notable conditions / duties
-  - Possible dispute angles to explore
-
-- Tag sections as **substantive** vs **meta / boilerplate** (regulator pages, ISO copyright, sample notices, etc.)
-- Emit a **claim‑facing Markdown report** per policy
-
-Outputs live in `data/processed/<POLICY_ID>.report.md`.
-
-### 2. Policy + denial A–G dispute report (v0)
+## What the app does
 
 Given:
 
-- A **policy summary JSON** (from the baseline pipeline), and
-- A **denial letter in plain text**
+- A homeowners policy PDF (currently optimized for HO3 forms), and
+- A denial letter PDF for a specific claim,
 
-the tool builds a **structured A–G dispute report**:
+…the app:
 
-**A.** Plain‑English overview of the dispute
-**B.** Coverage highlights that may support the insured
-**C.** Key exclusions / limitations that may hurt the insured
-**D.** Denial reasons (as stated / implied by the insurer)
-**E.** Possible dispute angles to explore (not legal advice)
-**F.** Missing information / suggested next steps
-**G.** Confidence + clauses to double‑check
+1. **Extracts and sections the policy** into definitions, coverages, exclusions, conditions, etc.
+2. **Summarizes each section** with a custom prompt tuned for HO3‑style language.
+3. **Analyzes the denial letter** and maps denial reasons back to relevant policy concepts.
+4. **Builds an A–G dispute report** that mirrors how public adjusters and coverage attorneys think about a file:
 
-This is the view you’d actually use in a claim review, mediation prep, or internal strategy meeting.
+   - A – Plain‑language overview
+   - B – Coverage highlights that may help the insured
+   - C – Key exclusions / limitations
+   - D – Denial reasons & cited clauses
+   - E – Possible dispute angles
+   - F – Missing info / suggested next steps
+   - G – Confidence notes & clauses to double‑check
 
-When you run the examples below, dispute reports are written as:
+5. **Renders the results in a Streamlit UI** with:
 
-- JSON: `data/processed/<POLICY_ID>__<DENIAL_ID>.dispute.json`
-- Markdown: `data/processed/<POLICY_ID>__<DENIAL_ID>.dispute.md`
+   - A “New claim” upload flow and progress bar (steps 1–4)
+   - A **Results** screen with:
 
----
+     - Hero summary (plain‑language story + key takeaways)
+     - Downloadable Markdown report
+     - Tabs for Dispute summary (A–G), Policy highlights, Denial reasons & angles, and Confidence / debug.
 
-## Who this is for
-
-- **Public adjusters** who want a first pass on complex policies and denials
-- **Coverage and property‑damage attorneys** who want faster "issue spotting"
-- **Technical folks** building internal tools for claims/legal teams
-- Anyone curious about **how AI can assist** in coverage disputes without giving legal advice
-
-If you’re non‑technical, you can still skim the example reports to see the kind of structure this tool produces.
+The goal is to give a **fast triage view** for busy professionals, not to replace full policy / case review.
 
 ---
 
-## Project structure
+## Screenshots (v1 UX)
+
+The repo’s GitHub PR and issues contain screenshots of:
+
+- **New claim flow** – upload policy + denial PDFs, optional nickname and state, step 1–4 progress bar.
+- **Results view** – A–G dispute summary, policy highlight checklist, denial reasons & angles, download button.
+
+---
+
+## Repo structure
 
 ```text
-data/
-  raw_policies/      # Input PDFs (HO3 sample forms, carrier forms)
-  raw_denials/       # Input denial letters as .txt
-  processed/         # JSON + Markdown outputs
-
-notebooks/           # Exploration / development notebooks
-
-src/
-  config.py          # Environment + model settings
-  llm_client.py      # OpenAI client + JSON helper
-  pdf_loader.py      # PDF -> text
-  sectioning.py      # Policy section splitter + role tagging
-  summarizer_frontier.py
-                     # Section summarizer + denial-aware report builder
-  run_baseline_policy_summary.py
-                     # CLI: policies -> section summaries (JSON)
-  report_builder.py  # CLI helpers + Markdown renderers
-  run_denial_summary.py
-                     # CLI: policy JSON + denial.txt -> A–G dispute report
+policy-dispute-ai-assistant/
+├─ src/
+│  ├─ config.py              # Env + safety flags (SAFE_MODE, PERSIST_RAW_TEXT, etc.)
+│  ├─ llm_client.py          # Thin wrapper around OpenAI Responses API
+│  ├─ pdf_loader.py          # PDF -> text extraction helpers
+│  ├─ sectioning.py          # Split policy into logical sections
+│  ├─ summarizer_frontier.py # Build denial-aware A–G report from summaries
+│  ├─ report_builder.py      # Turn DisputeReport into Markdown
+│  ├─ schemas.py             # Pydantic models for sections and DisputeReport
+│  ├─ demo_api.py            # Simple API-style helpers used by the frontend
+│  ├─ run_baseline_policy_summary.py   # CLI: summarize policy only
+│  └─ run_denial_summary.py            # CLI: summarize denial letters only
+│
+├─ frontend/
+│  ├─ app.py                 # Streamlit v1 UX (current demo)
+│  └─ app_v0_minimul.py      # Original single-page prototype (kept for reference)
+│
+├─ data/
+│  ├─ processed/             # Sample JSON + Markdown outputs (checked in)
+│  └─ uploads/               # Local upload cache (gitignored)
+│
+├─ notebooks/                # Experimental notebooks / scratchpads
+├─ .env.example              # Sample env vars
+├─ requirements.txt          # Python dependencies
+└─ README.md                 # You are here
 ```
 
 ---
 
-## Getting started
+## Prerequisites
 
-### 1. Clone and create a virtualenv
+- Python **3.10+**
+- An OpenAI API key with access to `gpt-4.1-mini` (or compatible model)
+
+---
+
+## Setup
+
+Clone the repo and create a virtual environment:
 
 ```bash
 git clone https://github.com/itprodirect/policy-dispute-ai-assistant.git
@@ -108,150 +112,158 @@ source .venv/Scripts/activate
 pip install -r requirements.txt
 ```
 
-### 2. Configure your OpenAI API key
+### Environment variables
 
-Create a `.env` file in the project root (you can copy from `.env.example` if it exists):
-
-```bash
-OPENAI_API_KEY=sk-...
-# optional override, otherwise defaults are set in config.py
-OPENAI_MODEL=gpt-4.1-mini
-```
-
-The code uses `src/config.py` and `src/llm_client.py` to read these values.
-
-### 3. Add some sample policies
-
-Drop HO3 policy PDFs into:
-
-```text
-data/raw_policies/
-```
-
-The repo includes anonymized samples, for example:
-
-- `HO3_TRUE_FL_2021.pdf`
-- `HO3_USAA_TX_OPIC_2008.pdf`
-- ISO and carrier variants
-
-### 4. Run the baseline policy summarizer
-
-This builds normalized JSON summaries and claim‑facing Markdown reports.
+Create a `.env` file based on `.env.example`:
 
 ```bash
-# Summarize all PDFs in data/raw_policies/
-python -m src.run_baseline_policy_summary data/raw_policies
+cp .env.example .env  # on Windows: copy .env.example .env
 ```
 
-Outputs:
-
-- JSON: `data/processed/<POLICY_ID>.json`
-- Markdown: `data/processed/<POLICY_ID>.report.md`
-
-Open one of the `.report.md` files in VS Code or GitHub to see the structure.
-
-### 5. Add a denial letter
-
-For now, v0 expects a **plain‑text** denial letter.
-
-Put a `.txt` file in:
-
-```text
-data/raw_denials/
-```
-
-Example (included or easy to recreate):
-
-- `data/raw_denials/HO3_TRUE_FL_2021_denial.txt`
-
-This is a realistic water‑damage denial (late notice, long‑term leakage, deductible issues, etc.).
-
-### 6. Build an A–G dispute report
-
-Use the denial‑aware CLI:
+Then edit `.env` and set at least:
 
 ```bash
-python -m src.run_denial_summary \
-  data/processed/HO3_TRUE_FL_2021.json \
-  data/raw_denials/HO3_TRUE_FL_2021_denial.txt
+OPENAI_API_KEY="sk-..."
+
+# Optional – override default model (defaults to gpt-4.1-mini)
+OPENAI_MODEL="gpt-4.1-mini"
+
+# Data-handling flags
+SAFE_MODE=true          # when true, raw text is not persisted to disk
+PERSIST_RAW_TEXT=false  # only set true if you explicitly want raw text saved
 ```
 
-This writes:
+The `src/config.py` module enforces these flags strictly:
 
-- JSON: `data/processed/HO3_TRUE_FL_2021__HO3_TRUE_FL_2021_denial.dispute.json`
-- Markdown: `data/processed/HO3_TRUE_FL_2021__HO3_TRUE_FL_2021_denial.dispute.md`
-
-Open the `.md` in your editor or on GitHub to see the full A–G analysis.
-
-You can reuse the same denial against different policies to stress‑test behavior:
-
-```bash
-python -m src.run_denial_summary \
-  data/processed/HO3_USAA_TX_OPIC_2008.json \
-  data/raw_denials/HO3_TRUE_FL_2021_denial.txt
-```
+- If `SAFE_MODE=true`, raw policy/denial text is **never** persisted, even if `PERSIST_RAW_TEXT` was turned on.
+- If flags have invalid values, the app will raise a `ConfigError` instead of silently misbehaving.
 
 ---
 
-## Command reference
+## Running the Streamlit app (v1 UX)
 
-### Baseline policy summary
-
-```bash
-python -m src.run_baseline_policy_summary <path-or-directory>
-```
-
-Example:
+From the repo root, with your virtualenv activated and `.env` configured:
 
 ```bash
-python -m src.run_baseline_policy_summary data/raw_policies
+streamlit run frontend/app.py
 ```
 
-### Policy + denial A–G dispute report
+This will start Streamlit on `http://localhost:8501`.
 
-```bash
-python -m src.run_denial_summary <policy_summary.json> <denial_letter.txt>
-```
+### New claim flow
 
-Example:
+1. Go to the **New claim** page (default).
+2. Fill in:
 
-```bash
-python -m src.run_denial_summary \
-  data/processed/HO3_TRUE_FL_2021.json \
-  data/raw_denials/HO3_TRUE_FL_2021_denial.txt
-```
+   - **Claim nickname** (optional; used in filenames and headings)
+   - **State** (optional; future hook for state‑specific guidance)
+
+3. Upload:
+
+   - **Policy PDF** – HO3 form for now (other forms may work but are less tested).
+   - **Denial letter PDF** – corresponding denial for this claim.
+
+4. Click **Analyze claim**.
+5. Watch the bottom status bar as the app walks through:
+
+   - Step 1/4 – Analyzing policy PDF
+   - Step 2/4 – Analyzing denial letter
+   - Step 3/4 – Building A–G dispute report
+   - Step 4/4 – Done
+
+6. When complete, the page scrolls to the **Results** section.
+
+### Results view
+
+The results page is split into:
+
+- **Dispute overview**
+
+  - A plain‑language narrative paragraph
+  - 2–4 bullet **Key takeaways** for quick gut‑check
+
+- **Actions**
+
+  - Button to **Download dispute report (Markdown)** – can be pasted into Word/Docs as a starting draft
+
+- **Detailed dispute views** (tabs):
+
+  - **Dispute summary (A–G)** – structured expanders for A–G with inline citations
+  - **Policy highlights** – checklist view of helpful provisions vs exclusions
+  - **Denial reasons** – bullet list of carrier’s reasons mapped to policy concepts
+  - **Confidence / debug** – meta notes and flags where the model is less confident
+
+Under the A–G tab there is an optional **“Full policy breakdown”** section that can show more verbose policy summaries when needed.
 
 ---
 
-## Safety, limitations, and disclaimers
+## CLI utilities (optional)
 
-This project is **experimental** and intended for **education and workflow support only**.
+You can also run the underlying pipelines from the command line without Streamlit.
 
-- It **does not provide legal advice**.
-- It **does not make coverage determinations**.
-- It can misread OCR’d text, mis‑interpret policy language, or miss important nuances.
-- Any outputs **must be reviewed by a licensed professional** before being relied on.
+### Summarize a policy PDF
 
-If you use this in real‑world work:
+```bash
+python -m src.run_baseline_policy_summary --policy-pdf path/to/policy.pdf
+```
 
-- Treat it as a **research assistant** or “issue spotter,” not a decision‑maker.
-- Always cross‑check cited clauses against the actual policy and endorsements.
-- Be mindful of confidentiality and PII if you process real claims.
+Outputs a JSON file like `data/processed/<stem>.json` containing section summaries.
+
+### Summarize a denial letter
+
+```bash
+python -m src.run_denial_summary --denial-pdf path/to/denial.pdf
+```
+
+Outputs a JSON or Markdown summary for the denial (depending on current implementation).
+
+### Build a combined dispute report (used by the frontend)
+
+The Streamlit app uses `src/demo_api.py` to:
+
+1. Run the policy and denial pipelines.
+2. Call `build_denial_aware_report(...)` from `summarizer_frontier.py`.
+3. Render the final Markdown via `report_builder.render_dispute_markdown(...)`.
+
+If you want to script this yourself, `demo_api.py` is the best entry point to study.
 
 ---
 
-## Roadmap (high‑level)
+## Data handling & safety
 
-Some directions under consideration:
+This repo is meant for **local experiments**, not production.
 
-- **UI demo** (Streamlit or similar) so non‑technical users can drag‑and‑drop policies and denials.
-- **Voice mode v1**: push‑to‑talk interface on top of the same A–G analysis.
-- Better **section taxonomy** (base form vs endorsements vs meta) in the reports.
-- Model/cost tuning and caching for large batches of policies.
-- Integration with richer document stores and RAG pipelines for large claim files.
+- PDFs are uploaded to `data/uploads/` (which is **gitignored**) for the duration of a run.
+- Processed summaries and dispute reports are written to `data/processed/` for inspection.
+- All calls to OpenAI go through your own API key.
+- Use `SAFE_MODE=true` if you want to avoid persisting raw policy/denial text to disk.
+
+**Do not commit real client data** to the repo, and be careful when sharing outputs that may contain PII or sensitive claim details.
+
+---
+
+## Roadmap / ideas
+
+Some obvious next steps:
+
+- **Better HO3 coverage & carrier diversity** – tune sectioning + prompts across more forms.
+- **State‑aware guidance** – use the `state` field to condition dispute angles.
+- **Multi‑claim workspace** – basic history of recent analyses.
+- ** richer policy / denial upload validation** – catch wrong file types, corrupt PDFs, etc.
+- **Export templates** – Word / Docs templates for CRNs, dispute letters, or attorney memos.
+
+If you experiment with the repo and find issues or ideas, feel free to open GitHub Issues or PRs.
+
+---
+
+## Legal disclaimer
+
+- This project is **not legal advice** and does **not** create an attorney–client relationship.
+- Outputs are AI‑generated and may be incomplete, inaccurate, or outdated.
+- Always verify results against the actual policy, denial letter, and applicable law before using anything in a real dispute.
 
 ---
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This repo is under the MIT license (see `LICENSE`). Use it, fork it, and adapt it to your own workflows at your own risk.
