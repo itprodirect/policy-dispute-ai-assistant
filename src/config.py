@@ -4,6 +4,12 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from functools import lru_cache
+from typing import Optional
+
+from dotenv import load_dotenv
+
+# Load .env file into environment
+load_dotenv()
 
 
 class ConfigError(RuntimeError):
@@ -58,6 +64,11 @@ class Settings:
     persist_raw_text: bool
     safe_mode: bool
 
+    # Weights & Biases logging
+    wandb_enabled: bool
+    wandb_project: str
+    wandb_entity: Optional[str]
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
@@ -73,10 +84,18 @@ def get_settings() -> Settings:
     # In safe mode we always drop raw_text, even if PERSIST_RAW_TEXT was set.
     persist_raw_text = False if safe_mode else persist_raw_text_default
 
+    # Weights & Biases config (all optional)
+    wandb_enabled = _get_bool_env("WANDB_ENABLED", False)
+    wandb_project = os.getenv("WANDB_PROJECT", "policy-dispute-ai")
+    wandb_entity = os.getenv("WANDB_ENTITY") or None
+
     return Settings(
         openai_api_key=_get_env_var("OPENAI_API_KEY"),
         # OPENAI_MODEL is optional; default to a reasonable model if not set.
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
         persist_raw_text=persist_raw_text,
         safe_mode=safe_mode,
+        wandb_enabled=wandb_enabled,
+        wandb_project=wandb_project,
+        wandb_entity=wandb_entity,
     )
