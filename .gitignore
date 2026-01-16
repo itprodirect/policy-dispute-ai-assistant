@@ -63,4 +63,11 @@ debug/
 # OS junk
 # -------------------------
 .DS_Store
-Thumbs.dbdata/uploads/
+Thumbs.db
+
+# -------------------------
+# Local uploads and artifacts
+# -------------------------
+data/uploads/
+frontend/data/
+wandb/

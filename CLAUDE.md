@@ -44,7 +44,7 @@ Copy `.env.example` to `.env` and set:
 2. **Sectioning**: `sectioning.split_into_sections()` splits policy text into canonical sections (DEFINITIONS, EXCLUSIONS, COVERAGE A-D, etc.) using HO3-specific heading detection
 3. **Section Summarization**: `summarizer_frontier.summarize_section()` calls OpenAI to extract key coverages, exclusions, conditions, and dispute angles per section
 4. **Dispute Report**: `summarizer_frontier.build_denial_aware_report()` combines policy summaries with denial letter text to produce the A-G report structure
-5. **Rendering**: `report_builder.render_dispute_markdown()` converts DisputeReport to downloadable Markdown
+5. **Rendering**: `report_builder.render_dispute_markdown()` and `render_dispute_docx()` convert DisputeReport to Markdown or Word (.docx)
 
 ### Key Modules
 - `src/config.py`: Settings singleton via `get_settings()`, enforces SAFE_MODE/PERSIST_RAW_TEXT flags

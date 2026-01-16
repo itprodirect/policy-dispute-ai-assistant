@@ -24,7 +24,11 @@ run_policy_analysis = demo_api.run_policy_analysis
 load_pdf_text = pdf_loader.load_pdf_text
 build_denial_aware_report = summarizer_frontier.build_denial_aware_report
 render_dispute_markdown = report_builder.render_dispute_markdown
+render_dispute_docx = report_builder.render_dispute_docx
 DisputeReport = schemas.DisputeReport
+Point = schemas.Point
+Angle = schemas.Angle
+ConfidenceBlock = schemas.ConfidenceBlock
 
 
 UPLOAD_DIR = Path("data/uploads")
@@ -101,6 +105,48 @@ def _render_dispute_angles(angles: List[Dict[str, Any]] | None) -> None:
             st.markdown(f"- {text}")
 
 
+def _dict_to_dispute_report(d: Dict[str, Any]) -> DisputeReport:
+    """Reconstruct a DisputeReport dataclass from a dict."""
+    def parse_points(items: List[Any] | None) -> List[Point]:
+        result = []
+        for item in (items or []):
+            if isinstance(item, dict):
+                text = str(item.get("text", "")).strip()
+                citation = item.get("citation")
+                if text:
+                    result.append(Point(text=text, citation=citation))
+        return result
+
+    def parse_angles(items: List[Any] | None) -> List[Angle]:
+        result = []
+        for item in (items or []):
+            if isinstance(item, dict):
+                text = str(item.get("text", "")).strip()
+                citations = item.get("citations") or []
+                if text:
+                    result.append(Angle(text=text, citations=citations))
+        return result
+
+    conf_dict = d.get("confidence") or {}
+    confidence = ConfidenceBlock(
+        score=conf_dict.get("score"),
+        notes=str(conf_dict.get("notes", "") or ""),
+        verify_clauses=conf_dict.get("verify_clauses") or [],
+    )
+
+    return DisputeReport(
+        policy_id=d.get("policy_id"),
+        denial_id=d.get("denial_id"),
+        plain_summary=str(d.get("plain_summary", "") or ""),
+        coverage_highlights=parse_points(d.get("coverage_highlights")),
+        exclusions_limitations=parse_points(d.get("exclusions_limitations")),
+        denial_reasons=parse_points(d.get("denial_reasons")),
+        dispute_angles=parse_angles(d.get("dispute_angles")),
+        missing_info=d.get("missing_info") or [],
+        confidence=confidence,
+    )
+
+
 def _render_hero(
     dispute_report: Dict[str, Any],
     dispute_markdown: str,
@@ -120,7 +166,7 @@ def _render_hero(
         else:
             st.write("No plain-language summary available from the model.")
 
-        # try to pull 2–3 “key takeaways” from B/E
+        # try to pull 2–3 "key takeaways" from B/E
         takeaways: List[str] = []
         for pt in dispute_report.get("coverage_highlights", []) or []:
             text = ""
@@ -152,15 +198,20 @@ def _render_hero(
 
     with col_right:
         st.markdown("##### Actions")
-        st.caption("Download or copy the full A–G dispute write-up.")
+        st.caption("Download the full A–G dispute write-up.")
         st.download_button(
-            "Download dispute report (Markdown)",
+            "Download as Word (.docx)",
+            data=render_dispute_docx(_dict_to_dispute_report(dispute_report)),
+            file_name=f"{policy_label}__{denial_label}.dispute.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+        st.download_button(
+            "Download as Markdown",
             data=dispute_markdown,
             file_name=f"{policy_label}__{denial_label}.dispute.md",
             mime="text/markdown",
         )
         st.caption(
-            "Paste into Word/Docs as a starting draft. "
             "Always compare against the actual policy & denial."
         )
 

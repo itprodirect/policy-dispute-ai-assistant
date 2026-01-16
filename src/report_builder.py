@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Iterable
 
+from docx import Document
+from docx.shared import Pt, Inches
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from rich import print
 from .schemas import DisputeReport
 
@@ -354,6 +358,146 @@ def render_dispute_markdown(report: DisputeReport) -> str:
     lines.append("")
 
     return "\n".join(lines)
+
+
+def render_dispute_docx(report: DisputeReport) -> bytes:
+    """
+    Render a DisputeReport (A–G structure) to a Word document (.docx).
+
+    Returns the document as bytes suitable for download.
+    """
+    doc = Document()
+
+    # Set default font
+    style = doc.styles["Normal"]
+    style.font.name = "Calibri"
+    style.font.size = Pt(11)
+
+    # Title
+    title = doc.add_heading("Policy Dispute Summary", level=0)
+    title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
+
+    # Metadata
+    if report.policy_id or report.denial_id:
+        meta_para = doc.add_paragraph()
+        if report.policy_id:
+            meta_para.add_run(f"Policy: {report.policy_id}").bold = True
+            if report.denial_id:
+                meta_para.add_run("  |  ")
+        if report.denial_id:
+            meta_para.add_run(f"Denial: {report.denial_id}").bold = True
+
+    # Framing disclaimer
+    disclaimer = doc.add_paragraph()
+    disclaimer.add_run("Framing: ").bold = True
+    disclaimer.add_run(
+        "This is an AI-generated analysis of policy language and a denial letter. "
+        "It is not legal advice and does not create coverage, rights, or an "
+        "attorney–client relationship."
+    ).italic = True
+
+    doc.add_paragraph()  # spacing
+
+    # A. Plain-English overview
+    doc.add_heading("A. Plain-English Overview of the Dispute", level=1)
+    if report.plain_summary.strip():
+        doc.add_paragraph(report.plain_summary.strip())
+    else:
+        doc.add_paragraph("No overview available.").italic = True
+
+    # Helper for B/C/D sections with points
+    def _add_points_section(heading: str, points: List[Any]) -> None:
+        doc.add_heading(heading, level=1)
+        if not points:
+            p = doc.add_paragraph("None identified.")
+            p.runs[0].italic = True
+        else:
+            for pt in points:
+                text = getattr(pt, "text", "").strip()
+                if not text:
+                    continue
+                citation = getattr(pt, "citation", None)
+                para = doc.add_paragraph(style="List Bullet")
+                para.add_run(text)
+                if citation:
+                    para.add_run(f" ({citation})").italic = True
+
+    _add_points_section(
+        "B. Coverage Highlights That May Support the Insured",
+        report.coverage_highlights,
+    )
+    _add_points_section(
+        "C. Key Exclusions / Limitations That May Hurt the Insured",
+        report.exclusions_limitations,
+    )
+    _add_points_section(
+        "D. Denial Reasons (as Stated or Implied by the Insurer)",
+        report.denial_reasons,
+    )
+
+    # E. Dispute angles
+    doc.add_heading("E. Possible Dispute Angles to Explore (Not Legal Advice)", level=1)
+    if not report.dispute_angles:
+        p = doc.add_paragraph("No dispute angles identified.")
+        p.runs[0].italic = True
+    else:
+        for angle in report.dispute_angles:
+            text = angle.text.strip()
+            if not text:
+                continue
+            para = doc.add_paragraph(style="List Bullet")
+            para.add_run(text)
+            if angle.citations:
+                cits = ", ".join(c for c in angle.citations if c.strip())
+                if cits:
+                    para.add_run(f"\nCitations: {cits}").italic = True
+
+    # F. Missing info
+    doc.add_heading("F. Missing Information / Suggested Next Steps", level=1)
+    if not report.missing_info:
+        p = doc.add_paragraph("No specific missing information identified.")
+        p.runs[0].italic = True
+    else:
+        for item in report.missing_info:
+            s = str(item).strip()
+            if s:
+                doc.add_paragraph(s, style="List Bullet")
+
+    # G. Confidence & verify clauses
+    doc.add_heading("G. Confidence and Clauses to Verify", level=1)
+    conf = report.confidence
+    has_confidence_content = False
+
+    if conf.score is not None:
+        para = doc.add_paragraph()
+        para.add_run("Confidence score (0–1): ").bold = True
+        para.add_run(f"{conf.score:.2f}")
+        has_confidence_content = True
+
+    if conf.notes.strip():
+        para = doc.add_paragraph()
+        para.add_run("Notes: ").bold = True
+        para.add_run(conf.notes.strip())
+        has_confidence_content = True
+
+    if conf.verify_clauses:
+        para = doc.add_paragraph()
+        para.add_run("Clauses / sections to double-check:").bold = True
+        for clause in conf.verify_clauses:
+            s = str(clause).strip()
+            if s:
+                doc.add_paragraph(s, style="List Bullet")
+        has_confidence_content = True
+
+    if not has_confidence_content:
+        p = doc.add_paragraph("No explicit confidence metadata provided.")
+        p.runs[0].italic = True
+
+    # Save to bytes
+    buffer = io.BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()
 
 
 if __name__ == "__main__":
