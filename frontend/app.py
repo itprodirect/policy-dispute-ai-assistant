@@ -20,6 +20,8 @@ summarizer_frontier = importlib.import_module("src.summarizer_frontier")
 report_builder = importlib.import_module("src.report_builder")
 schemas = importlib.import_module("src.schemas")
 database = importlib.import_module("src.database")
+sectioning = importlib.import_module("src.sectioning")
+citation_linking = importlib.import_module("src.citation_linking")
 
 run_policy_analysis = demo_api.run_policy_analysis
 load_pdf_text = pdf_loader.load_pdf_text
@@ -34,6 +36,10 @@ save_claim = database.save_claim
 get_all_claims = database.get_all_claims
 get_claim_by_id = database.get_claim_by_id
 delete_claim = database.delete_claim
+split_into_sections = sectioning.split_into_sections
+build_section_text_map = citation_linking.build_section_text_map
+get_citation_display_data = citation_linking.get_citation_display_data
+get_angle_citation_display_data = citation_linking.get_angle_citation_display_data
 
 
 UPLOAD_DIR = Path("data/uploads")
@@ -41,6 +47,7 @@ SESSION_KEY_POLICY = "policy_result"
 SESSION_KEY_DISPUTE = "dispute_result"
 SESSION_KEY_CLAIM_METADATA = "claim_metadata"
 SESSION_KEY_SELECTED_CLAIM = "selected_claim_id"
+SESSION_KEY_SECTION_MAP = "section_text_map"
 
 
 def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
@@ -59,13 +66,21 @@ def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
     return path
 
 
-def _render_points(points: List[Dict[str, Any]] | None, empty_message: str) -> None:
+def _render_points(
+    points: List[Dict[str, Any]] | None,
+    empty_message: str,
+    section_map: Dict[str, str] | None = None,
+    key_prefix: str = "pt",
+) -> None:
+    """Render points with clickable citation accordions."""
     points = points or []
+    section_map = section_map or {}
+
     if not points:
         st.write(empty_message)
         return
 
-    for p in points:
+    for idx, p in enumerate(points):
         if isinstance(p, dict):
             text = str(p.get("text", "")).strip()
             citation = str(p.get("citation", "") or "").strip()
@@ -76,19 +91,50 @@ def _render_points(points: List[Dict[str, Any]] | None, empty_message: str) -> N
         if not text:
             continue
 
-        if citation:
-            st.markdown(f"- {text}  \n  _Citation: {citation}_")
-        else:
-            st.markdown(f"- {text}")
+        # Display the point text
+        st.markdown(f"- {text}")
+
+        # If there's a citation, try to make it clickable
+        if citation and section_map:
+            display_data = get_citation_display_data(p, section_map)
+
+            if display_data["has_linkable_citation"]:
+                # Clickable accordion with section text
+                with st.expander(f"View source: {display_data['section_name']}", expanded=False):
+                    section_text = display_data["section_text"] or ""
+                    # Show first 2000 chars with option to expand
+                    if len(section_text) > 2000:
+                        st.text_area(
+                            "Policy section text",
+                            section_text,
+                            height=300,
+                            disabled=True,
+                            key=f"{key_prefix}_cit_{idx}_{hash(text)}_{hash(citation)}",
+                        )
+                    else:
+                        st.markdown(f"```\n{section_text}\n```")
+            else:
+                # Non-linkable citation, just show as text
+                st.caption(f"_Citation: {citation}_")
+        elif citation:
+            # No section map available, show citation as plain text
+            st.caption(f"_Citation: {citation}_")
 
 
-def _render_dispute_angles(angles: List[Dict[str, Any]] | None) -> None:
+def _render_dispute_angles(
+    angles: List[Dict[str, Any]] | None,
+    section_map: Dict[str, str] | None = None,
+    key_prefix: str = "ang",
+) -> None:
+    """Render dispute angles with clickable citation accordions."""
     angles = angles or []
+    section_map = section_map or {}
+
     if not angles:
         st.write("No dispute angles identified.")
         return
 
-    for a in angles:
+    for idx, a in enumerate(angles):
         if isinstance(a, dict):
             text = str(a.get("text", "")).strip()
             raw_cits = a.get("citations") or []
@@ -105,11 +151,37 @@ def _render_dispute_angles(angles: List[Dict[str, Any]] | None) -> None:
         if not text:
             continue
 
-        if cits:
+        # Display the angle text
+        st.markdown(f"- {text}")
+
+        # If there are citations and we have a section map, make them clickable
+        if cits and section_map:
+            display_data = get_angle_citation_display_data(a, section_map)
+
+            # Render linked citations as accordions
+            for cit_idx, linked in enumerate(display_data.get("linked_citations", [])):
+                section_name = linked.get("section_name", "")
+                with st.expander(f"View source: {section_name}", expanded=False):
+                    section_text = linked.get("section_text") or ""
+                    if len(section_text) > 2000:
+                        st.text_area(
+                            "Policy section text",
+                            section_text,
+                            height=300,
+                            disabled=True,
+                            key=f"{key_prefix}_cit_{idx}_{cit_idx}_{hash(text)}_{hash(section_name)}",
+                        )
+                    else:
+                        st.markdown(f"```\n{section_text}\n```")
+
+            # Show unlinked citations as plain text
+            unlinked = display_data.get("unlinked_citations", [])
+            if unlinked:
+                st.caption(f"_Other citations: {', '.join(unlinked)}_")
+        elif cits:
+            # No section map, show all as plain text
             joined = ", ".join(cits)
-            st.markdown(f"- {text}  \n  _Citations: {joined}_")
-        else:
-            st.markdown(f"- {text}")
+            st.caption(f"_Citations: {joined}_")
 
 
 def _dict_to_dispute_report(d: Dict[str, Any]) -> DisputeReport:
@@ -223,7 +295,13 @@ def _render_hero(
         )
 
 
-def _render_dispute_tabs(dispute_report: Dict[str, Any]) -> None:
+def _render_dispute_tabs(
+    dispute_report: Dict[str, Any],
+    section_map: Dict[str, str] | None = None,
+) -> None:
+    """Render the dispute report tabs with optional citation linking."""
+    section_map = section_map or {}
+
     tab_ag, tab_policy_view, tab_denial_view, tab_debug = st.tabs(
         [
             "Dispute summary (A–G)",
@@ -237,6 +315,9 @@ def _render_dispute_tabs(dispute_report: Dict[str, Any]) -> None:
     with tab_ag:
         st.markdown("### A–G dispute structure")
 
+        if section_map:
+            st.caption("Click 'View source' below citations to see the original policy text.")
+
         with st.expander("A – Plain-language overview", expanded=True):
             plain_summary = str(dispute_report.get(
                 "plain_summary", "") or "").strip()
@@ -249,22 +330,28 @@ def _render_dispute_tabs(dispute_report: Dict[str, Any]) -> None:
             _render_points(
                 dispute_report.get("coverage_highlights"),
                 "No coverage highlights identified.",
+                section_map,
+                key_prefix="ag_b",
             )
 
         with st.expander("C – Key exclusions / limitations that may hurt the insured"):
             _render_points(
                 dispute_report.get("exclusions_limitations"),
                 "No exclusions / limitations identified.",
+                section_map,
+                key_prefix="ag_c",
             )
 
         with st.expander("D – Denial reasons & cited clauses"):
             _render_points(
                 dispute_report.get("denial_reasons"),
                 "No denial reasons extracted from the letter.",
+                section_map,
+                key_prefix="ag_d",
             )
 
         with st.expander("E – Possible dispute angles to explore"):
-            _render_dispute_angles(dispute_report.get("dispute_angles"))
+            _render_dispute_angles(dispute_report.get("dispute_angles"), section_map, key_prefix="ag_e")
 
         with st.expander("F – Missing information / suggested next steps"):
             missing = dispute_report.get("missing_info") or []
@@ -311,12 +398,16 @@ def _render_dispute_tabs(dispute_report: Dict[str, Any]) -> None:
         _render_points(
             dispute_report.get("coverage_highlights"),
             "No coverage highlights identified.",
+            section_map,
+            key_prefix="pol_b",
         )
 
         st.markdown("#### Exclusions / limitations (C)")
         _render_points(
             dispute_report.get("exclusions_limitations"),
             "No exclusions / limitations identified.",
+            section_map,
+            key_prefix="pol_c",
         )
 
     # Denial slice
@@ -327,10 +418,12 @@ def _render_dispute_tabs(dispute_report: Dict[str, Any]) -> None:
         _render_points(
             dispute_report.get("denial_reasons"),
             "No denial reasons extracted from the letter.",
+            section_map,
+            key_prefix="den_d",
         )
 
         st.markdown("#### Dispute angles (E)")
-        _render_dispute_angles(dispute_report.get("dispute_angles"))
+        _render_dispute_angles(dispute_report.get("dispute_angles"), section_map, key_prefix="den_e")
 
     # Minimal JSON view
     with tab_debug:
@@ -401,6 +494,14 @@ def _run_full_analysis(
         policy_file.getvalue(),
         policy_file.name,
     )
+
+    # Step 1b: Extract raw sections for citation linking (in-memory only)
+    uploaded_pdf_path = Path(policy_result.get("artifacts", {}).get("uploaded_pdf", ""))
+    if uploaded_pdf_path.is_file():
+        policy_text = load_pdf_text(uploaded_pdf_path)
+        raw_sections = split_into_sections(policy_text)
+        section_map = build_section_text_map(raw_sections)
+        st.session_state[SESSION_KEY_SECTION_MAP] = section_map
 
     # Step 2: denial text
     status.write("Step 2/4 – Saving and reading denial letter PDF…")
@@ -569,7 +670,9 @@ def _render_results_section() -> None:
     )
 
     st.markdown("### Detailed dispute views")
-    _render_dispute_tabs(dispute_report)
+    # Get section map from session state for citation linking
+    section_map = st.session_state.get(SESSION_KEY_SECTION_MAP, {})
+    _render_dispute_tabs(dispute_report, section_map)
 
     st.markdown("### Full policy breakdown (optional)")
     _render_policy_breakdown(policy_result)
@@ -631,7 +734,8 @@ def _render_claim_history_page() -> None:
             )
 
             st.markdown("### Detailed dispute views")
-            _render_dispute_tabs(dispute_report)
+            # Note: Section map not available for historical claims (in-memory only)
+            _render_dispute_tabs(dispute_report, section_map=None)
 
             if policy_result:
                 st.markdown("### Full policy breakdown (optional)")
