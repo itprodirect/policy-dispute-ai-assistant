@@ -33,6 +33,7 @@ ConfidenceBlock = schemas.ConfidenceBlock
 save_claim = database.save_claim
 get_all_claims = database.get_all_claims
 get_claim_by_id = database.get_claim_by_id
+delete_claim = database.delete_claim
 
 
 UPLOAD_DIR = Path("data/uploads")
@@ -638,12 +639,37 @@ def _render_claim_history_page() -> None:
 
             return
 
-    # Show claim list
-    st.markdown(f"**{len(claims)} claim(s) found**")
+    # Search box
+    search_query = st.text_input(
+        "Search claims",
+        placeholder="Filter by nickname or policy filename...",
+        label_visibility="collapsed",
+    )
 
-    for claim in claims:
+    # Filter claims based on search query
+    if search_query:
+        query_lower = search_query.lower()
+        filtered_claims = [
+            c for c in claims
+            if query_lower in (c.nickname or "").lower()
+            or query_lower in (c.policy_filename or "").lower()
+        ]
+    else:
+        filtered_claims = claims
+
+    # Show claim count
+    if search_query:
+        st.markdown(f"**{len(filtered_claims)} of {len(claims)} claim(s) match**")
+    else:
+        st.markdown(f"**{len(claims)} claim(s)**")
+
+    if not filtered_claims:
+        st.info("No claims match your search.")
+        return
+
+    for claim in filtered_claims:
         with st.container():
-            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+            col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 1, 1])
 
             with col1:
                 nickname = claim.nickname or "Untitled claim"
@@ -660,6 +686,25 @@ def _render_claim_history_page() -> None:
                 if st.button("View", key=f"view_{claim.id}"):
                     st.session_state[SESSION_KEY_SELECTED_CLAIM] = claim.id
                     st.rerun()
+
+            with col5:
+                if st.button("Delete", key=f"delete_{claim.id}", type="secondary"):
+                    st.session_state[f"confirm_delete_{claim.id}"] = True
+                    st.rerun()
+
+            # Delete confirmation
+            if st.session_state.get(f"confirm_delete_{claim.id}"):
+                st.warning(f"Delete claim #{claim.id} ({nickname})? This cannot be undone.")
+                conf_col1, conf_col2, _ = st.columns([1, 1, 4])
+                with conf_col1:
+                    if st.button("Yes, delete", key=f"confirm_yes_{claim.id}", type="primary"):
+                        delete_claim(claim.id)
+                        st.session_state[f"confirm_delete_{claim.id}"] = False
+                        st.rerun()
+                with conf_col2:
+                    if st.button("Cancel", key=f"confirm_no_{claim.id}"):
+                        st.session_state[f"confirm_delete_{claim.id}"] = False
+                        st.rerun()
 
             st.divider()
 
