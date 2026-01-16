@@ -51,6 +51,7 @@ Copy `.env.example` to `.env` and set:
 - `src/llm_client.py`: `call_llm_json()` wrapper with retry logic, JSON response parsing, optional wandb logging
 - `src/schemas.py`: Pydantic-style dataclasses for `SectionSummary`, `DisputeReport`, `Point`, `Angle`, `ConfidenceBlock`
 - `src/demo_api.py`: High-level service layer used by Streamlit frontend (`run_policy_analysis()`, `run_dispute_analysis()`)
+- `src/database.py`: SQLite-based claim history storage (`save_claim()`, `get_all_claims()`, `get_claim_by_id()`)
 
 ### A-G Report Structure
 - A: Plain-language overview
@@ -65,6 +66,7 @@ Copy `.env.example` to `.env` and set:
 - `data/uploads/`: Temporary uploaded PDFs (gitignored)
 - `data/processed/`: JSON summaries + Markdown reports (normal mode)
 - `data/processed_safe/`: Outputs when SAFE_MODE=true
+- `data/claims.db`: SQLite database for claim history (gitignored)
 
 ## Code Patterns
 

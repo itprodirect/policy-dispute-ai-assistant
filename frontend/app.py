@@ -19,6 +19,7 @@ pdf_loader = importlib.import_module("src.pdf_loader")
 summarizer_frontier = importlib.import_module("src.summarizer_frontier")
 report_builder = importlib.import_module("src.report_builder")
 schemas = importlib.import_module("src.schemas")
+database = importlib.import_module("src.database")
 
 run_policy_analysis = demo_api.run_policy_analysis
 load_pdf_text = pdf_loader.load_pdf_text
@@ -29,11 +30,16 @@ DisputeReport = schemas.DisputeReport
 Point = schemas.Point
 Angle = schemas.Angle
 ConfidenceBlock = schemas.ConfidenceBlock
+save_claim = database.save_claim
+get_all_claims = database.get_all_claims
+get_claim_by_id = database.get_claim_by_id
 
 
 UPLOAD_DIR = Path("data/uploads")
 SESSION_KEY_POLICY = "policy_result"
 SESSION_KEY_DISPUTE = "dispute_result"
+SESSION_KEY_CLAIM_METADATA = "claim_metadata"
+SESSION_KEY_SELECTED_CLAIM = "selected_claim_id"
 
 
 def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
@@ -514,8 +520,28 @@ def _render_intake_form() -> None:
 
     st.session_state[SESSION_KEY_POLICY] = policy_result
     st.session_state[SESSION_KEY_DISPUTE] = dispute_result
+    st.session_state[SESSION_KEY_CLAIM_METADATA] = {
+        "nickname": claim_nickname.strip(),
+        "state": state.strip(),
+        "policy_filename": policy_file.name,
+        "denial_filename": denial_file.name,
+    }
 
-    st.success("Analysis complete.")
+    # Save to database
+    try:
+        claim_id = save_claim(
+            nickname=claim_nickname.strip(),
+            state=state.strip(),
+            policy_filename=policy_file.name,
+            denial_filename=denial_file.name,
+            report_json={
+                "policy_result": policy_result,
+                "dispute_result": dispute_result,
+            },
+        )
+        st.success(f"Analysis complete. Saved as claim #{claim_id}.")
+    except Exception as e:
+        st.warning(f"Analysis complete, but failed to save to history: {e}")
 
 
 def _render_results_section() -> None:
@@ -556,6 +582,104 @@ def _render_results_section() -> None:
         )
 
 
+def _render_claim_history_page() -> None:
+    """Render the Claim History page."""
+    st.header("Claim History")
+    st.caption("View and reload previous claim analyses.")
+
+    claims = get_all_claims()
+
+    if not claims:
+        st.info("No claims saved yet. Analyze a claim to see it here.")
+        return
+
+    # Check if we're viewing a specific claim
+    if SESSION_KEY_SELECTED_CLAIM in st.session_state and st.session_state[SESSION_KEY_SELECTED_CLAIM]:
+        claim_id = st.session_state[SESSION_KEY_SELECTED_CLAIM]
+        claim = get_claim_by_id(claim_id)
+
+        if claim:
+            if st.button("← Back to claim list"):
+                st.session_state[SESSION_KEY_SELECTED_CLAIM] = None
+                st.rerun()
+
+            st.subheader(f"Claim #{claim.id}: {claim.nickname or 'Untitled'}")
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("State", claim.state or "N/A")
+            col2.metric("Policy", claim.policy_filename)
+            col3.metric("Created", claim.created_at.strftime("%Y-%m-%d %H:%M"))
+
+            st.caption(f"Denial file: {claim.denial_filename}")
+
+            # Load the saved results
+            policy_result = claim.report_json.get("policy_result", {})
+            dispute_result = claim.report_json.get("dispute_result", {})
+            dispute_report = dispute_result.get("dispute_report", {}) or {}
+
+            policy_label = str(dispute_result.get("policy_id") or "policy")
+            denial_label = str(dispute_result.get("denial_id") or "denial")
+
+            st.divider()
+
+            _render_hero(
+                dispute_report,
+                dispute_result.get("markdown", "") or "",
+                policy_label,
+                denial_label,
+            )
+
+            st.markdown("### Detailed dispute views")
+            _render_dispute_tabs(dispute_report)
+
+            if policy_result:
+                st.markdown("### Full policy breakdown (optional)")
+                _render_policy_breakdown(policy_result)
+
+            return
+
+    # Show claim list
+    st.markdown(f"**{len(claims)} claim(s) found**")
+
+    for claim in claims:
+        with st.container():
+            col1, col2, col3, col4 = st.columns([3, 2, 2, 1])
+
+            with col1:
+                nickname = claim.nickname or "Untitled claim"
+                st.markdown(f"**#{claim.id}** – {nickname}")
+                st.caption(f"Policy: {claim.policy_filename}")
+
+            with col2:
+                st.write(f"State: {claim.state or 'N/A'}")
+
+            with col3:
+                st.write(claim.created_at.strftime("%Y-%m-%d %H:%M"))
+
+            with col4:
+                if st.button("View", key=f"view_{claim.id}"):
+                    st.session_state[SESSION_KEY_SELECTED_CLAIM] = claim.id
+                    st.rerun()
+
+            st.divider()
+
+
+def _render_new_claim_page() -> None:
+    """Render the New Claim page."""
+    st.markdown(
+        """
+This internal demo ingests a homeowners policy PDF **and** a denial letter PDF and
+produces a structured A–G dispute summary.
+
+> **Important:** This is an AI-generated analysis of policy language and a denial letter.
+> It is **not** legal advice and does not create coverage, rights, or an attorney–client relationship.
+"""
+    )
+
+    _render_intake_form()
+    _render_results_section()
+
+
 def main() -> None:
     st.set_page_config(
         page_title="Policy Dispute AI – Claim A–G Demo",
@@ -564,18 +688,18 @@ def main() -> None:
 
     st.title("Policy Dispute AI – Claim A–G Demo")
 
-    st.markdown(
-        """
-This internal demo ingests a homeowners policy PDF **and** a denial letter PDF and
-produces a structured A–G dispute summary.
-
-> **Important:** This is an AI-generated analysis of policy language and a denial letter.  
-> It is **not** legal advice and does not create coverage, rights, or an attorney–client relationship.
-"""
+    # Sidebar navigation
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio(
+        "Go to",
+        ["New Claim", "Claim History"],
+        label_visibility="collapsed",
     )
 
-    _render_intake_form()
-    _render_results_section()
+    if page == "New Claim":
+        _render_new_claim_page()
+    else:
+        _render_claim_history_page()
 
 
 if __name__ == "__main__":
