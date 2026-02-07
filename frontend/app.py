@@ -48,6 +48,11 @@ SESSION_KEY_DISPUTE = "dispute_result"
 SESSION_KEY_CLAIM_METADATA = "claim_metadata"
 SESSION_KEY_SELECTED_CLAIM = "selected_claim_id"
 SESSION_KEY_SECTION_MAP = "section_text_map"
+SESSION_KEY_DEMO_MODE = "demo_mode"
+
+DEMO_ASSET_DIR = Path("data/processed/demo")
+DEMO_JSON_PATH = DEMO_ASSET_DIR / "demo.json"
+DEMO_MD_PATH = DEMO_ASSET_DIR / "demo.report.md"
 
 
 def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
@@ -64,6 +69,202 @@ def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
     path = UPLOAD_DIR / filename
     path.write_bytes(uploaded_file.getvalue())
     return path
+
+
+def _demo_asset_instructions() -> str:
+    return (
+        "Demo assets not found. Create them by copying a known sample:\n"
+        "1) data/processed/HO3_ISO_1999_III_SAMPLE__1768603155.json -> "
+        "data/processed/demo/demo.json\n"
+        "2) data/processed/HO3_ISO_1999_III_SAMPLE__1768603155.report.md -> "
+        "data/processed/demo/demo.report.md\n"
+        "Alternate (dispute report only):\n"
+        "1) data/processed/HO3_USAA_TX_OPIC_2008__HO3_TRUE_FL_2021_denial.dispute.json -> "
+        "data/processed/demo/demo.json\n"
+        "2) data/processed/HO3_USAA_TX_OPIC_2008__HO3_TRUE_FL_2021_denial.dispute.md -> "
+        "data/processed/demo/demo.report.md"
+    )
+
+
+def _build_policy_result_from_summary(
+    summary_data: Dict[str, Any],
+    *,
+    summary_path: Path,
+    markdown_text: str,
+) -> Dict[str, Any]:
+    policy_report = report_builder.build_policy_report(summary_data)
+    markdown = markdown_text or report_builder.render_markdown(policy_report)
+
+    return {
+        "policy_name": policy_report.policy_name,
+        "source_path": policy_report.source_path,
+        "stats": {
+            "num_sections": policy_report.num_sections,
+            "num_unknown_sections": policy_report.num_unknown_sections,
+            "num_meta_sections": policy_report.num_meta_sections,
+        },
+        "sections_substantive": policy_report.sections_substantive,
+        "sections_meta": policy_report.sections_meta,
+        "artifacts": {
+            "summary_json": str(summary_path),
+            "markdown_report": str(DEMO_MD_PATH),
+            "demo_mode": True,
+        },
+        "markdown": markdown,
+    }
+
+
+def _build_demo_dispute_report_from_policy(summary_data: Dict[str, Any]) -> Dict[str, Any]:
+    sections = summary_data.get("sections", []) or []
+    substantive = []
+    for s in sections:
+        role = (s.get("section_role") or "substantive").lower()
+        if role != "meta":
+            substantive.append(s)
+
+    def collect_points(field: str, limit: int) -> List[Dict[str, Any]]:
+        items: List[Dict[str, Any]] = []
+        for section in substantive:
+            section_name = (section.get("section_name") or "UNKNOWN").strip()
+            for item in section.get(field, []) or []:
+                text = str(item).strip()
+                if not text:
+                    continue
+                items.append({"text": text, "citation": section_name})
+                if len(items) >= limit:
+                    return items
+        return items
+
+    def collect_angles(limit: int) -> List[Dict[str, Any]]:
+        items: List[Dict[str, Any]] = []
+        for section in substantive:
+            section_name = (section.get("section_name") or "UNKNOWN").strip()
+            for item in section.get("dispute_angles_possible", []) or []:
+                text = str(item).strip()
+                if not text:
+                    continue
+                items.append({"text": text, "citations": [section_name]})
+                if len(items) >= limit:
+                    return items
+        return items
+
+    policy_id = summary_data.get("policy_id") or "policy"
+
+    return {
+        "policy_id": policy_id,
+        "denial_id": "demo_denial",
+        "plain_summary": (
+            "Demo Mode: This dispute summary is generated from the policy summary "
+            "only. No denial letter was analyzed."
+        ),
+        "coverage_highlights": collect_points("key_coverages", 4),
+        "exclusions_limitations": collect_points("key_exclusions", 4),
+        "denial_reasons": [],
+        "dispute_angles": collect_angles(6),
+        "missing_info": [
+            "Denial letter text (required for live analysis).",
+            "Claim facts and loss timeline.",
+            "Photos, estimates, and repair invoices.",
+            "Policy declarations page for limits and deductible.",
+        ],
+        "confidence": {
+            "score": 0.2,
+            "notes": f"Demo Mode only. Generated from {policy_id} policy summaries.",
+            "verify_clauses": [],
+        },
+    }
+
+
+def _load_demo_assets() -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    if not DEMO_JSON_PATH.is_file() or not DEMO_MD_PATH.is_file():
+        raise FileNotFoundError(_demo_asset_instructions())
+
+    demo_payload = json.loads(DEMO_JSON_PATH.read_text(encoding="utf-8"))
+    demo_markdown = DEMO_MD_PATH.read_text(encoding="utf-8")
+
+    if (
+        isinstance(demo_payload, dict)
+        and "policy_result" in demo_payload
+        and "dispute_result" in demo_payload
+    ):
+        policy_result = demo_payload.get("policy_result") or {}
+        dispute_result = demo_payload.get("dispute_result") or {}
+        if not dispute_result.get("markdown"):
+            dispute_result["markdown"] = demo_markdown
+        return policy_result, dispute_result
+
+    if isinstance(demo_payload, dict) and "plain_summary" in demo_payload:
+        dispute_report = demo_payload
+        dispute_result = {
+            "policy_id": dispute_report.get("policy_id") or "policy",
+            "denial_id": dispute_report.get("denial_id") or "demo_denial",
+            "dispute_report": dispute_report,
+            "markdown": demo_markdown,
+            "artifacts": {
+                "demo_json": str(DEMO_JSON_PATH),
+                "demo_markdown": str(DEMO_MD_PATH),
+            },
+        }
+        policy_result = {
+            "policy_name": dispute_result["policy_id"],
+            "source_path": "",
+            "stats": {"num_sections": 0, "num_unknown_sections": 0, "num_meta_sections": 0},
+            "sections_substantive": [],
+            "sections_meta": [],
+            "artifacts": {
+                "summary_json": str(DEMO_JSON_PATH),
+                "markdown_report": str(DEMO_MD_PATH),
+                "demo_mode": True,
+            },
+            "markdown": "",
+        }
+        return policy_result, dispute_result
+
+    if isinstance(demo_payload, dict) and "sections" in demo_payload:
+        policy_result = _build_policy_result_from_summary(
+            demo_payload,
+            summary_path=DEMO_JSON_PATH,
+            markdown_text=demo_markdown,
+        )
+        dispute_report = _build_demo_dispute_report_from_policy(demo_payload)
+        dispute_result = {
+            "policy_id": demo_payload.get("policy_id") or "policy",
+            "denial_id": "demo_denial",
+            "dispute_report": dispute_report,
+            "markdown": render_dispute_markdown(_dict_to_dispute_report(dispute_report)),
+            "artifacts": {
+                "demo_json": str(DEMO_JSON_PATH),
+                "demo_markdown": str(DEMO_MD_PATH),
+            },
+        }
+        return policy_result, dispute_result
+
+    raise RuntimeError(
+        "Demo assets loaded but demo.json format is unsupported. "
+        "Expected a policy summary JSON, a dispute report JSON, or a bundle "
+        "with policy_result + dispute_result."
+    )
+
+
+def _load_demo_into_session() -> None:
+    try:
+        policy_result, dispute_result = _load_demo_assets()
+    except FileNotFoundError as exc:
+        st.error(str(exc))
+        st.stop()
+    except Exception as exc:  # noqa: BLE001
+        st.error(f"Failed to load demo assets: {exc}")
+        st.stop()
+
+    st.session_state[SESSION_KEY_POLICY] = policy_result
+    st.session_state[SESSION_KEY_DISPUTE] = dispute_result
+    st.session_state[SESSION_KEY_SECTION_MAP] = {}
+    st.session_state[SESSION_KEY_CLAIM_METADATA] = {
+        "nickname": "Demo Mode",
+        "state": "",
+        "policy_filename": "demo.json",
+        "denial_filename": "demo.report.md",
+    }
 
 
 def _render_points(
@@ -825,6 +1026,14 @@ produces a structured A–G dispute summary.
 """
     )
 
+    if st.session_state.get(SESSION_KEY_DEMO_MODE):
+        st.info(
+            "Demo Mode is ON. Loading deterministic demo assets with zero API calls."
+        )
+        _load_demo_into_session()
+        _render_results_section()
+        return
+
     _render_intake_form()
     _render_results_section()
 
@@ -839,6 +1048,27 @@ def main() -> None:
 
     # Sidebar navigation
     st.sidebar.title("Navigation")
+    current_demo = st.session_state.get(SESSION_KEY_DEMO_MODE, False)
+    demo_mode = st.sidebar.toggle(
+        "Demo Mode (offline)",
+        value=current_demo,
+        help="Load deterministic demo assets with zero API calls.",
+    )
+    if demo_mode != current_demo:
+        st.session_state[SESSION_KEY_DEMO_MODE] = demo_mode
+        for key in [
+            SESSION_KEY_POLICY,
+            SESSION_KEY_DISPUTE,
+            SESSION_KEY_SECTION_MAP,
+            SESSION_KEY_CLAIM_METADATA,
+        ]:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.session_state[SESSION_KEY_SELECTED_CLAIM] = None
+        st.rerun()
+
+    if demo_mode:
+        st.sidebar.caption("Demo Mode enabled \u2013 uploads and API calls are disabled.")
     page = st.sidebar.radio(
         "Go to",
         ["New Claim", "Claim History"],
