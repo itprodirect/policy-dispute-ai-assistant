@@ -34,6 +34,8 @@ class WandbRunTracker:
     Accumulates metrics across all LLM calls in a single claim run.
     """
     total_tokens: int = 0
+    total_prompt_tokens: int = 0
+    total_completion_tokens: int = 0
     total_latency_ms: float = 0.0
     call_count: int = 0
     error_count: int = 0
@@ -44,11 +46,15 @@ class WandbRunTracker:
         latency_ms: float,
         tokens: int,
         success: bool,
+        prompt_tokens: int = 0,
+        completion_tokens: int = 0,
     ) -> None:
         """Record metrics from a single LLM call."""
         self.call_count += 1
         self.total_latency_ms += latency_ms
         self.total_tokens += tokens
+        self.total_prompt_tokens += prompt_tokens
+        self.total_completion_tokens += completion_tokens
         if not success:
             self.error_count += 1
 
@@ -76,6 +82,7 @@ def start_wandb_run(
     claim_id: str,
     mode: str,
     git_commit: Optional[str] = None,
+    default_model: Optional[str] = None,
 ) -> None:
     """
     Initialize a W&B run with claim-level context.
@@ -96,6 +103,8 @@ def start_wandb_run(
 
     if git_commit is None:
         git_commit = _get_git_commit()
+    if default_model is None:
+        default_model = settings.openai_model
 
     # Initialize tracker
     _run_tracker = WandbRunTracker()
@@ -110,7 +119,7 @@ def start_wandb_run(
             "run/git_commit": git_commit,
             "run/safe_mode": settings.safe_mode,
             "run/persist_raw_text": settings.persist_raw_text,
-            "run/default_model": settings.openai_model,
+            "run/default_model": default_model,
         },
         # Allow multiple runs in same process (for testing/batch scenarios)
         reinit=True,
@@ -135,6 +144,8 @@ def finish_wandb_run() -> None:
         # Log rollup metrics
         wandb.log({
             "run/total_tokens": _run_tracker.total_tokens,
+            "run/total_prompt_tokens": _run_tracker.total_prompt_tokens,
+            "run/total_completion_tokens": _run_tracker.total_completion_tokens,
             "run/total_latency_ms": _run_tracker.total_latency_ms,
             "run/calls": _run_tracker.call_count,
             "run/errors": _run_tracker.error_count,

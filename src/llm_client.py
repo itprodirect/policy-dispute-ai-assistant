@@ -90,12 +90,14 @@ def call_llm_json(
 
             # Log successful call
             total_tokens = response.usage.total_tokens
+            prompt_tokens = response.usage.prompt_tokens
+            completion_tokens = response.usage.completion_tokens
             _log_to_wandb({
                 "llm/model": model_name,
                 "llm/stage": stage or "unknown",
                 "llm/latency_ms": latency_ms,
-                "llm/prompt_tokens": response.usage.prompt_tokens,
-                "llm/completion_tokens": response.usage.completion_tokens,
+                "llm/prompt_tokens": prompt_tokens,
+                "llm/completion_tokens": completion_tokens,
                 "llm/total_tokens": total_tokens,
                 "llm/temperature": temperature,
                 "llm/attempt": attempt,
@@ -106,7 +108,14 @@ def call_llm_json(
             # Record to run tracker if active
             tracker = get_run_tracker()
             if tracker is not None:
-                tracker.record_call(stage, latency_ms, total_tokens, success=True)
+                tracker.record_call(
+                    stage,
+                    latency_ms,
+                    total_tokens,
+                    success=True,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                )
 
             return parsed
 
@@ -116,6 +125,9 @@ def call_llm_json(
                 "llm/model": model_name,
                 "llm/stage": stage or "unknown",
                 "llm/latency_ms": latency_ms,
+                "llm/prompt_tokens": 0,
+                "llm/completion_tokens": 0,
+                "llm/total_tokens": 0,
                 "llm/temperature": temperature,
                 "llm/attempt": attempt,
                 "llm/success": False,
@@ -143,6 +155,9 @@ def call_llm_json(
                 "llm/model": model_name,
                 "llm/stage": stage or "unknown",
                 "llm/latency_ms": latency_ms,
+                "llm/prompt_tokens": 0,
+                "llm/completion_tokens": 0,
+                "llm/total_tokens": 0,
                 "llm/temperature": temperature,
                 "llm/attempt": attempt,
                 "llm/success": False,
