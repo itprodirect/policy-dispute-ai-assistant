@@ -69,8 +69,12 @@ policy-dispute-ai-assistant/
 │  ├─ report_builder.py      # Turn DisputeReport into Markdown
 │  ├─ schemas.py             # Pydantic models for sections and DisputeReport
 │  ├─ demo_api.py            # Simple API-style helpers used by the frontend
+│  ├─ wandb_telemetry.py     # W&B run lifecycle, rollups, A-G quality evaluator
 │  ├─ run_baseline_policy_summary.py   # CLI: summarize policy only
 │  └─ run_denial_summary.py            # CLI: summarize denial letters only
+│
+├─ scripts/
+│  └─ model_compare.py       # Run same fixture through multiple models with W&B telemetry
 │
 ├─ frontend/
 │  ├─ app.py                 # Streamlit v1 UX (current demo)
@@ -226,6 +230,59 @@ The Streamlit app uses `src/demo_api.py` to:
 3. Render the final Markdown via `report_builder.render_dispute_markdown(...)`.
 
 If you want to script this yourself, `demo_api.py` is the best entry point to study.
+
+---
+
+## W&B telemetry (optional)
+
+The app supports optional [Weights & Biases](https://wandb.ai) logging for run-level telemetry.  Enable it to compare models, track quality, and catch regressions.
+
+### What gets logged
+
+| Namespace | Fields | When |
+|-----------|--------|------|
+| `llm/*` | `model`, `stage`, `latency_ms`, `prompt_tokens`, `completion_tokens`, `total_tokens`, `success`, `attempt`, `error_type`, `temperature` | Every LLM call |
+| `run/*` | `total_tokens`, `total_prompt_tokens`, `total_completion_tokens`, `total_latency_ms`, `calls`, `errors` | Once, at run finish |
+| `quality/*` | `ag_present_count`, `ag_order_ok` | Once, after dispute report generation |
+| `run/` (config) | `claim_id`, `mode`, `git_commit`, `safe_mode`, `persist_raw_text`, `default_model` | Set at run start |
+
+**Privacy**: No raw policy, denial, report, or prompt text is ever sent to W&B. Only hashes, counts, timings, and flags.
+
+### Enabling W&B
+
+Add to your `.env`:
+
+```bash
+WANDB_ENABLED=true
+WANDB_PROJECT=policy-dispute-ai
+WANDB_ENTITY=itprodirect     # optional; your W&B team/user name
+```
+
+W&B runs are created automatically per claim in `demo_api.py` (Streamlit) or per model in `scripts/model_compare.py`.
+
+### Model comparison
+
+Compare models side-by-side, each producing a separate W&B run:
+
+```bash
+# Default: runs gpt-4.1-mini against bundled fixtures
+python -m scripts.model_compare
+
+# Custom fixtures and models
+python -m scripts.model_compare \
+  --policy_text_fixture data/processed_safe/HO3_TRUE_FL_2021.json \
+  --denial_text_fixture data/raw_denials/HO3_TRUE_FL_2021_denial.txt \
+  --models gpt-4.1-mini,gpt-4.1,gpt-4o-mini
+```
+
+Filter runs in the W&B UI by config value `run/mode`:
+- `policy_only` -- policy-only analysis from Streamlit
+- `dispute` -- full dispute report from Streamlit
+- `model_compare` -- model comparison script
+
+### Where to find run config in W&B
+
+Open any run in the W&B dashboard, then: **Overview tab > Config section**.  The `run/*` fields (claim_id, mode, git_commit, safe_mode, default_model) are there.  They are also saved in the run's `config.yaml` under the Files tab.
 
 ---
 
