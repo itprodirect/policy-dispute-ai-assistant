@@ -13,6 +13,7 @@ from .report_builder import (
 )
 from .summarizer_frontier import build_denial_aware_report
 from .config import get_settings
+from .wandb_telemetry import start_wandb_run, finish_wandb_run, evaluate_ag_structure
 
 
 UPLOAD_DIR = Path("data/uploads")
@@ -80,22 +81,29 @@ def run_policy_analysis(
 
     pdf_path = _save_uploaded_policy(policy_file_bytes, policy_filename)
 
-    # This runs your existing end-to-end pipeline (PDF -> sections -> LLM summaries -> JSON).
-    summary_json_path = summarize_policy(pdf_path)
+    # Start W&B run for policy analysis
+    start_wandb_run(
+        claim_id=pdf_path.stem,
+        mode="policy_only",
+    )
 
-    # Normalise into PolicyReport
-    summary_data = json.loads(summary_json_path.read_text(encoding="utf-8"))
-    policy_report = build_policy_report(summary_data)
+    try:
+        # This runs your existing end-to-end pipeline (PDF -> sections -> LLM summaries -> JSON).
+        summary_json_path = summarize_policy(pdf_path)
 
-    sections_substantive = _strip_raw_text(policy_report.sections_substantive)
-    sections_meta = _strip_raw_text(policy_report.sections_meta)
+        # Normalise into PolicyReport
+        summary_data = json.loads(summary_json_path.read_text(encoding="utf-8"))
+        policy_report = build_policy_report(summary_data)
 
-    # Build Markdown in-memory and also write it out next to the JSON summary.
-    markdown_text = render_markdown(policy_report)
-    md_path = summary_json_path.with_suffix(".report.md")
-    md_path.write_text(markdown_text, encoding="utf-8")
+        sections_substantive = _strip_raw_text(policy_report.sections_substantive)
+        sections_meta = _strip_raw_text(policy_report.sections_meta)
 
-    return {
+        # Build Markdown in-memory and also write it out next to the JSON summary.
+        markdown_text = render_markdown(policy_report)
+        md_path = summary_json_path.with_suffix(".report.md")
+        md_path.write_text(markdown_text, encoding="utf-8")
+
+        return {
         "policy_name": policy_report.policy_name,
         "source_path": policy_report.source_path,
         "stats": {
@@ -113,7 +121,10 @@ def run_policy_analysis(
             "persist_raw_text": settings.persist_raw_text,
         },
         "markdown": markdown_text,
-    }
+        }
+    finally:
+        # Always finish W&B run and log rollups
+        finish_wandb_run()
 
 
 def run_dispute_analysis(
@@ -147,45 +158,56 @@ def run_dispute_analysis(
     """
     settings = get_settings()
 
-    policy_path = Path(policy_summary_json_path)
-    if not policy_path.is_file():
-        raise FileNotFoundError(
-            f"Policy summary JSON not found: {policy_path}")
-
-    policy_payload = json.loads(policy_path.read_text(encoding="utf-8"))
-
-    # Call LLM-based builder (policy summary + denial text -> DisputeReport dataclass)
-    dispute_report = build_denial_aware_report(policy_payload, denial_text)
-
-    # Attach simple metadata (same pattern as run_denial_summary.py)
-    policy_id = policy_payload.get("policy_id") or policy_path.stem
+    # Generate claim_id for W&B run
     if denial_id is None:
-        # Fallback: timestamped ID if UI doesn’t supply something better
         denial_id = f"denial_{int(time.time())}"
 
-    dispute_report.policy_id = policy_id
-    dispute_report.denial_id = denial_id
-
-    # Decide where to write outputs
-    output_dir = _resolve_dispute_output_dir()
-    output_dir.mkdir(parents=True, exist_ok=True)
-    base_name = f"{policy_id}__{denial_id}.dispute"
-
-    json_out = output_dir / f"{base_name}.json"
-    md_out = output_dir / f"{base_name}.md"
-
-    # Persist JSON version of the dispute report
-    dispute_dict = dispute_report.to_dict()
-    json_out.write_text(
-        json.dumps(dispute_dict, indent=2, ensure_ascii=False),
-        encoding="utf-8",
+    # Start W&B run for dispute analysis
+    start_wandb_run(
+        claim_id=denial_id,
+        mode="dispute",
     )
 
-    # Render and persist Markdown
-    md_text = render_dispute_markdown(dispute_report)
-    md_out.write_text(md_text, encoding="utf-8")
+    try:
+        policy_path = Path(policy_summary_json_path)
+        if not policy_path.is_file():
+            raise FileNotFoundError(
+                f"Policy summary JSON not found: {policy_path}")
 
-    return {
+        policy_payload = json.loads(policy_path.read_text(encoding="utf-8"))
+
+        # Call LLM-based builder (policy summary + denial text -> DisputeReport dataclass)
+        dispute_report = build_denial_aware_report(policy_payload, denial_text)
+
+        # Evaluate A-G structure and log quality metrics
+        evaluate_ag_structure(dispute_report)
+
+        # Attach simple metadata (same pattern as run_denial_summary.py)
+        policy_id = policy_payload.get("policy_id") or policy_path.stem
+
+        dispute_report.policy_id = policy_id
+        dispute_report.denial_id = denial_id
+
+        # Decide where to write outputs
+        output_dir = _resolve_dispute_output_dir()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        base_name = f"{policy_id}__{denial_id}.dispute"
+
+        json_out = output_dir / f"{base_name}.json"
+        md_out = output_dir / f"{base_name}.md"
+
+        # Persist JSON version of the dispute report
+        dispute_dict = dispute_report.to_dict()
+        json_out.write_text(
+            json.dumps(dispute_dict, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+
+        # Render and persist Markdown
+        md_text = render_dispute_markdown(dispute_report)
+        md_out.write_text(md_text, encoding="utf-8")
+
+        return {
         "policy_id": policy_id,
         "denial_id": denial_id,
         "dispute_report": dispute_dict,
@@ -196,4 +218,7 @@ def run_dispute_analysis(
             "policy_summary_json": str(policy_path),
             "safe_mode": settings.safe_mode,
         },
-    }
+        }
+    finally:
+        # Always finish W&B run and log rollups
+        finish_wandb_run()
