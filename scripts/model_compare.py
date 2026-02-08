@@ -176,7 +176,11 @@ def run_model_comparison() -> None:
             print(f"[FAIL] {result['model']:20s} | Error: {result['error']}")
 
     if settings.wandb_enabled:
-        print(f"\n[W&B] View runs in W&B: https://wandb.ai/{settings.wandb_entity}/{settings.wandb_project}")
+        if settings.wandb_entity:
+            project_url = f"https://wandb.ai/{settings.wandb_entity}/{settings.wandb_project}"
+        else:
+            project_url = f"https://wandb.ai/{settings.wandb_project}"
+        print(f"\n[W&B] View runs in W&B: {project_url}")
         print(f"   Filter by tag: mode=model_compare")
     else:
         print(f"\n[TIP] Enable W&B logging: WANDB_ENABLED=true in .env")
