@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 from openai import OpenAI
 from .config import get_settings, ConfigError
+from .wandb_telemetry import get_run_tracker
 
 # Optional wandb import - gracefully handle if not installed
 try:
@@ -18,9 +19,6 @@ except ImportError:
     wandb = None
     _WANDB_AVAILABLE = False
 
-# Module-level wandb run state
-_wandb_run = None
-
 
 @dataclass
 class LLMCallError(RuntimeError):
@@ -28,26 +26,16 @@ class LLMCallError(RuntimeError):
     last_response: Optional[str] = None
 
 
-def _init_wandb() -> None:
-    """Initialize wandb run if enabled and not already initialized."""
-    global _wandb_run
-    if _wandb_run is not None:
-        return
+def _log_to_wandb(metrics: Dict[str, Any]) -> None:
+    """
+    Log metrics to wandb if a run is active.
+
+    IMPORTANT: Only logs if wandb.run is not None.
+    All wandb.init() calls must go through wandb_telemetry.start_wandb_run().
+    """
     if not _WANDB_AVAILABLE:
         return
-    settings = get_settings()
-    if not settings.wandb_enabled:
-        return
-    _wandb_run = wandb.init(
-        project=settings.wandb_project,
-        entity=settings.wandb_entity,
-        config={"model": settings.openai_model},
-    )
-
-
-def _log_to_wandb(metrics: Dict[str, Any]) -> None:
-    """Log metrics to wandb if initialized."""
-    if _wandb_run is not None:
+    if wandb.run is not None:
         wandb.log(metrics)
 
 
@@ -66,6 +54,7 @@ def call_llm_json(
     max_retries: int = 3,
     timeout: float = 30.0,
     model: Optional[str] = None,
+    stage: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Call the LLM expecting a JSON object.
@@ -73,10 +62,8 @@ def call_llm_json(
     - Uses OpenAI chat.completions API.
     - Retries on transient errors and JSON decode failures.
     - Raises LLMCallError with the last raw response text on final failure.
-    - Logs metrics to wandb if enabled.
+    - Logs metrics to wandb if a run is active (via wandb_telemetry.start_wandb_run).
     """
-    _init_wandb()
-
     last_raw: Optional[str] = None
     model_name = model or _get_model_name()
 
@@ -102,17 +89,24 @@ def call_llm_json(
             parsed = json.loads(raw)
 
             # Log successful call
+            total_tokens = response.usage.total_tokens
             _log_to_wandb({
                 "llm/model": model_name,
+                "llm/stage": stage or "unknown",
                 "llm/latency_ms": latency_ms,
                 "llm/prompt_tokens": response.usage.prompt_tokens,
                 "llm/completion_tokens": response.usage.completion_tokens,
-                "llm/total_tokens": response.usage.total_tokens,
+                "llm/total_tokens": total_tokens,
                 "llm/temperature": temperature,
                 "llm/attempt": attempt,
                 "llm/success": True,
                 "llm/error_type": None,
             })
+
+            # Record to run tracker if active
+            tracker = get_run_tracker()
+            if tracker is not None:
+                tracker.record_call(stage, latency_ms, total_tokens, success=True)
 
             return parsed
 
@@ -120,12 +114,17 @@ def call_llm_json(
             latency_ms = (time.time() - start_time) * 1000
             _log_to_wandb({
                 "llm/model": model_name,
+                "llm/stage": stage or "unknown",
                 "llm/latency_ms": latency_ms,
                 "llm/temperature": temperature,
                 "llm/attempt": attempt,
                 "llm/success": False,
                 "llm/error_type": "json_decode_error",
             })
+            # Record error to run tracker
+            tracker = get_run_tracker()
+            if tracker is not None:
+                tracker.record_call(stage, latency_ms, 0, success=False)
             # Model returned non-JSON; retry unless we're out of attempts.
             if attempt == max_retries:
                 raise LLMCallError(
@@ -142,12 +141,17 @@ def call_llm_json(
             latency_ms = (time.time() - start_time) * 1000
             _log_to_wandb({
                 "llm/model": model_name,
+                "llm/stage": stage or "unknown",
                 "llm/latency_ms": latency_ms,
                 "llm/temperature": temperature,
                 "llm/attempt": attempt,
                 "llm/success": False,
                 "llm/error_type": type(e).__name__,
             })
+            # Record error to run tracker
+            tracker = get_run_tracker()
+            if tracker is not None:
+                tracker.record_call(stage, latency_ms, 0, success=False)
             if attempt == max_retries:
                 raise LLMCallError(
                     message=f"LLM call failed after retries: {e}",

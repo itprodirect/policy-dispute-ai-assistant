@@ -63,6 +63,7 @@ def summarize_section(section_name: str, section_text: str) -> SectionSummary:
         temperature=0.2,
         max_retries=3,
         timeout=30.0,
+        stage="section_summary",
     )
 
     return SectionSummary(
@@ -262,6 +263,7 @@ def build_denial_aware_report(
         temperature=0.2,
         max_retries=3,
         timeout=60.0,
+        stage="dispute_report",
     )
 
     plain_summary = str(data.get("plain_summary", "") or "").strip()
