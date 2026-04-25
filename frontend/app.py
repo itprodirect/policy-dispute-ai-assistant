@@ -51,6 +51,7 @@ SESSION_KEY_CLAIM_METADATA = "claim_metadata"
 SESSION_KEY_SELECTED_CLAIM = "selected_claim_id"
 SESSION_KEY_SECTION_MAP = "section_text_map"
 SESSION_KEY_DEMO_MODE = "demo_mode"
+SESSION_KEY_PAGE = "main_page"
 
 DEMO_ASSET_DIR = ROOT / "assets" / "demo"
 DEMO_JSON_PATH = DEMO_ASSET_DIR / "demo.json"
@@ -1025,6 +1026,39 @@ def _render_results_section() -> None:
     _render_policy_breakdown(policy_result)
 
 
+def _open_claim_history_detail(claim_id: int) -> None:
+    st.session_state[SESSION_KEY_SELECTED_CLAIM] = claim_id
+    st.session_state[SESSION_KEY_PAGE] = "Claim History"
+
+
+def _render_recent_claims_card() -> None:
+    if is_demo_force_on():
+        return
+
+    claims = get_all_claims()
+    recent_claims = claims[:2]
+    if not recent_claims:
+        return
+
+    st.markdown("### Recent claims")
+
+    columns = st.columns(len(recent_claims))
+    for col, claim in zip(columns, recent_claims):
+        with col:
+            with st.container(border=True):
+                title = claim.nickname or f"Claim #{claim.id}"
+                st.markdown(f"**{title}**")
+                if claim.state:
+                    st.caption(f"State: {claim.state}")
+                st.caption(f"Created: {claim.created_at.strftime('%Y-%m-%d %H:%M')}")
+                st.button(
+                    "View",
+                    key=f"recent_view_{claim.id}",
+                    on_click=_open_claim_history_detail,
+                    args=(claim.id,),
+                )
+
+
 def _render_claim_history_page() -> None:
     """Render the Claim History page."""
     st.header("Claim History")
@@ -1181,6 +1215,7 @@ def _render_new_claim_page() -> None:
         return
 
     _render_intake_form()
+    _render_recent_claims_card()
     _render_results_section()
 
 
@@ -1240,6 +1275,7 @@ def main() -> None:
         "Go to",
         ["New Claim", "Claim History"],
         label_visibility="collapsed",
+        key=SESSION_KEY_PAGE,
     )
 
     if page == "New Claim":
