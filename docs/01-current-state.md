@@ -17,14 +17,18 @@ Phase 1A demo polish is complete. The app remains a Streamlit research prototype
 
 - PR #34: docs wrap for Phase 1 status and boundaries.
 - PR #35: README screenshot polish with five committed demo-safe screenshots.
+- PR #38: GitHub Actions CI for pytest.
+- PR #39: stale `frontend/data/` artifact cleanup and runtime artifact docs.
 
-## Not Started
+## Current Phase
 
-Phase 1B and 1C have not started yet. Phase 2 model/speed refactor has not started either.
+Phase 1B technical closeout is complete with #19 GitHub Actions CI for pytest and #22 stale `frontend/data/` artifact cleanup.
 
-Phase 1B covers operational closeout: CI, stale artifact cleanup, and the walkthrough/screenshot recipe. Phase 1C covers hosted demo and trust polish: deployment prep, Demo Mode citation/source accordions, and export context polish. True Phase 2 work is the model/API/speed refactor and remains deferred.
+#20 walkthrough video and screenshot recipe remains open, but it is intentionally deferred to a future brand/content walkthrough session.
 
-No CI, deployment config, citation accordion update, export polish, model/API modernization, prompt changes, schema changes, backend rebuild, auth, users, billing, or storage changes have been started.
+Phase 1C technical work may begin with #18 Streamlit Community Cloud deployment prep. Phase 1C also includes #21 Demo Mode citation/source accordions and #23 export context polish.
+
+True Phase 2 remains reserved for model/speed/API refactor work. No deployment config, citation accordion update, export polish, model/API modernization, prompt changes, schema changes, backend rebuild, auth, users, billing, or storage changes have been started.
 
 ## Local Cleanup
 

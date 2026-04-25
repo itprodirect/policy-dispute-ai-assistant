@@ -1,6 +1,6 @@
 # Roadmap
 
-## Phase 1A: Demo polish — completed
+## Phase 1A: Demo polish - completed
 
 - #12 `DEMO_FORCE_ON` hosted demo safety.
 - #13 Hero/value proposition.
@@ -9,18 +9,17 @@
 - #16 Progress UI and step labels.
 - #17 Recent claims card.
 
-## Phase 1B: Operational closeout — next
+## Phase 1B: Operational closeout - technical closeout complete
 
-Work one issue per PR, in this order:
+Completed:
 
-1. #19 GitHub Actions CI for pytest.
-2. #22 Clean up stale `frontend/data/` artifacts.
-3. #20 Walkthrough video and screenshot recipe.
+- #19 GitHub Actions CI for pytest.
+- #22 Clean up stale `frontend/data/` artifacts.
 
 Note:
-The walkthrough/video recipe can be deferred from the current coding session if needed, but it remains part of Phase 1B closeout.
+#20 walkthrough video and screenshot recipe remains open, but it is intentionally deferred to a future brand/content walkthrough session. Do not mix it into technical hardening sessions.
 
-## Phase 1C: Hosted demo and trust polish
+## Phase 1C: Hosted demo and trust polish - next
 
 Work one issue per PR, in this order:
 
@@ -31,9 +30,9 @@ Work one issue per PR, in this order:
 Note:
 Deployment prep may come before citation accordions, but the hosted demo should not be publicly promoted as a final portfolio demo until the Demo Mode citation/source accordion work is complete.
 
-## Phase 2: Model and speed refactor — not started
+## Phase 2: Model and speed refactor - not started
 
-Begin only after Phase 1A, 1B, and 1C are complete or intentionally deferred, and only after focused inspection or measurement.
+True Phase 2 remains reserved for model/speed/API refactor work. Begin only after Phase 1A, 1B, and 1C are complete or intentionally deferred, and only after focused inspection or measurement.
 
 Scope:
 
