@@ -1,6 +1,6 @@
 # v1.5 Demo Polish — Audit & Issue Plan
 
-**Status:** Audit + planning only. No code changes proposed in this document.
+**Status:** Audit + implementation plan. Foundation fixes #10 and #24 are complete; remaining items are implementation follow-ons.
 **Audience:** Codex 5.5 Pro implementation, plus reviewers converting items into GitHub issues.
 **Goal:** Take the existing internal Streamlit prototype and turn it into something that holds up under a portfolio screenshot, a 60–90 second walkthrough video, and a selective live demo — without rewriting the backend.
 
@@ -25,11 +25,11 @@
 - The **citation accordions** (`View source: COVERAGE A - DWELLING`) are a strong screenshot moment **if** the demo path can render them.
 
 ### 1.3 What looks prototype-ish or risky for screenshots
-- 🔴 **Demo Mode is shipping-broken from a fresh clone.** `.gitignore` excludes the entire `data/processed/` tree (line 35), including `data/processed/demo/`. Anyone who clones the repo and toggles Demo Mode hits `Demo assets not found.` with paste-instructions referencing files that are *also* gitignored.
-- 🔴 **The committed demo asset is the wrong shape.** `data/processed/demo/demo.json` (when present locally) is a *policy summary*, not a denial-aware dispute bundle. The frontend synthesizes a dispute view by stitching policy summary fields, then writes `confidence: 0.2`, `plain_summary: "Demo Mode: ... No denial letter was analyzed."`, and an empty Section D. That is the screenshot demo viewers will see.
+- ✅ **Demo Mode now ships with tracked assets.** PR [#25](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/25) moved the deterministic offline bundle to `assets/demo/demo.json` and `assets/demo/demo.report.md`, so fresh clones no longer depend on gitignored `data/processed/demo/`.
+- ✅ **Demo Mode now uses a denial-aware dispute bundle.** The tracked demo JSON is a compact A–G dispute report with populated denial reasons and confidence `0.90`, not the old policy-summary-only stub path.
 - 🔴 **No sample input PDFs are tracked.** `data/raw_policies/` and `data/raw_denials/` are gitignored. A first-time visitor cannot do a real "upload and run" demo without bringing their own PDFs.
-- 🟡 **`.env.example` ships unsafe defaults.** Line 8 sets `PERSIST_RAW_TEXT=true`, contradicting the README's "leave SAFE_MODE=true so raw policy language is not persisted to disk" guidance. Anyone copying the file ships raw policy text to disk.
-- 🟡 **`requirements.txt` has no pins.** Streamlit + OpenAI SDK majors break things; community-cloud rebuilds will silently drift.
+- ✅ **`.env.example` is now safe by default.** PR [#27](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/27) changed `PERSIST_RAW_TEXT=false` and documented that `SAFE_MODE=true` strips raw text even if persistence is changed.
+- ✅ **`requirements.txt` now pins direct runtime dependencies.** PR [#27](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/27) added exact pins for the working local versions.
 - 🟡 **Page title is wordy:** *"Policy Dispute AI – Claim A–G Demo"*. The hero immediately repeats the same string.
 - 🟡 **No "30-second understanding" hero.** First-time visitors land on a generic upload form. There's no value-prop card, no example claim, no walkthrough teaser.
 - 🟡 **Confidence/debug tab dumps raw JSON.** Useful for dev, ugly for screenshots — raw `dispute_report` JSON is the default rendering for tab #4.
@@ -82,7 +82,7 @@ Each issue is sized for a focused PR. "Codex-safe" means the scope is narrow eno
 
 ### P0 — Blockers for "fresh clone, single click demo"
 
-#### Issue P0-1 — Track demo assets and ship a real dispute bundle ([#10](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/10))
+#### Issue P0-1 — Track demo assets and ship a real dispute bundle ([#10](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/10)) — Completed in PR [#25](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/25)
 
 **Priority:** P0
 **Type:** code + data + docs
@@ -151,7 +151,7 @@ streamlit run frontend/app.py
 
 ---
 
-#### Issue P0-3 — Fix `.env.example` defaults + pin `requirements.txt` ([#24](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/24))
+#### Issue P0-3 — Fix `.env.example` defaults + pin `requirements.txt` ([#24](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/24)) — Completed in PR [#27](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/27)
 
 **Priority:** P0
 **Type:** docs + ops
@@ -493,21 +493,22 @@ DEMO_FORCE_ON=true streamlit run frontend/app.py
 
 ## 4. Recommended implementation sequence
 
-A linear path from "broken demo" to "portfolio-ready":
+Foundation completed:
 
-1. **P0-1** Track demo assets + ship real dispute bundle. *(unblocks every screenshot)*
-2. **P0-3** Fix `.env.example` + pin `requirements.txt`. *(small, unblocks P2-1 deployment later)*
-3. **P0-2** Sample PDFs + "Try with sample" button. *(unblocks the "live demo" recording)*
-4. **P1-3** Clean up Confidence/Debug tab. *(quick, big screenshot win)*
-5. **P1-2** Hero polish + 30-second value prop.
-6. **P1-5** Tighten progress UI (`st.status`).
-7. **P1-1** `DEMO_FORCE_ON` flag. *(prerequisite for hosted demo)*
-8. **P1-4** Capture screenshots + update README. *(do this AFTER P1-1/2/3/5 so screenshots show the polished UI)*
-9. **P2-1** Streamlit Community Cloud deploy.
-10. **P2-2** CI workflow.
-11. **P2-3, P2-4, P2-5, P2-6** Follow-ons in any order.
+1. ✅ **P0-1** Track demo assets + ship real dispute bundle. Completed in PR [#25](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/25).
+2. ✅ **P0-3** Fix `.env.example` + pin `requirements.txt`. Completed in PR [#27](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/27).
 
-Total: 8 P0/P1 PRs lands you at portfolio-ready. P2s are gravy.
+Next recommended implementation sequence from the current `main` branch:
+
+1. **#11 / P0-2** Add tracked sample claim PDFs and "Try with sample" button.
+2. **#12 / P1-1** Add `DEMO_FORCE_ON` for hosted demo safety.
+3. **#13 / P1-2** Polish hero and 30-second value proposition.
+4. **#14 / P1-3** Clean up Confidence tab/debug JSON.
+5. **#16 / P1-5** Tighten analysis progress UI.
+6. **#18 / P2-1** Prepare Streamlit Community Cloud deployment.
+7. **#20 / P2-3** Add screenshot/video walkthrough recipe.
+
+Keep #11 first unless hosting becomes the immediate priority; the sample path is the next blocker for a compelling live walkthrough.
 
 ---
 
@@ -566,24 +567,22 @@ Total: 8 P0/P1 PRs lands you at portfolio-ready. P2s are gravy.
 
 ---
 
-## 7. Recommended first / second implementation PRs
+## 7. Recommended next implementation PRs
 
-### Recommended first implementation PR — **P0-1: Track demo assets + ship a real dispute bundle**
+### Recommended next implementation PR — **#11 / P0-2: Sample PDFs + "Try with sample" button**
 
-**Why first:** This is the single change with the highest leverage on screenshot quality. It is mechanical (file move + `.gitignore` + small frontend tweak), Codex-safe, and unblocks every subsequent screenshot. Skipping it means every other UI polish PR is photographing a broken demo.
+**Why next:** Demo Mode and dependency reproducibility are now fixed. The next bottleneck is "I can't actually try the live pipeline without bringing my own PDFs." Solving that turns every README visitor into a potential live-demo user and gives the walkthrough video something real to film.
 
 **Concrete first steps for the implementer:**
-1. Create `assets/demo/` directory.
-2. Copy `data/processed/HO3_USAA_TX_OPIC_2008__HO3_TRUE_FL_2021_denial.dispute.json` → `assets/demo/demo.json`.
-3. Copy the matching `.dispute.md` → `assets/demo/demo.report.md`.
-4. Update `frontend/app.py:DEMO_ASSET_DIR` to `Path("assets/demo")`.
-5. Confirm the existing `_load_demo_assets()` `dispute_report` code path (line 196) handles this payload — it already does.
-6. Update `RUNBOOK.md` Demo Mode section.
-7. Verify with a fresh clone walkthrough.
+1. Confirm candidate sample inputs contain no real client data or PII.
+2. Add tracked sample assets under `assets/samples/`.
+3. Add the "Try with sample claim" button on the New Claim page.
+4. Run the same code path as a normal upload.
+5. Keep the UI copy clear that the sample is synthetic/regulator-filed and not legal advice.
 
-### Recommended second implementation PR — **P0-2: Sample PDFs + "Try with sample" button**
+### Recommended follow-up implementation PR — **#12 / P1-1: `DEMO_FORCE_ON` hosted demo safety**
 
-**Why second:** With Demo Mode fixed, the next bottleneck is "I can't actually try the live pipeline without bringing my own PDFs." Solving that turns every README visitor into a potential live-demo user. It also means the walkthrough video (P2-3) has something real to film.
+**Why second:** Once the sample path exists, `DEMO_FORCE_ON` makes the hosted demo safe by disabling uploads and API calls on public infrastructure.
 
 ---
 
@@ -599,6 +598,7 @@ Total: 8 P0/P1 PRs lands you at portfolio-ready. P2s are gravy.
 - ❌ **Do NOT add observability/eval infrastructure beyond the existing W&B hooks.** Keep telemetry off-by-default; portfolio viewers don't need a metrics dashboard.
 - ❌ **Do NOT enable Live Mode on the public hosted demo.** Bake `DEMO_FORCE_ON=true` into the hosted deployment so the Streamlit Community Cloud instance can never burn API credits or accept third-party PDFs.
 - ⚠️ **Be cautious with sample PDFs.** Even regulator-filed forms have copyright headers. Verify HO3 ISO 1999 III and USAA OPIC TX 2008 are in fact freely redistributable — if not, generate a clean-room synthetic HO3-shaped form for the sample bundle.
+- ⚠️ **Track dependency cleanup for W&B.** `wandb==0.24.0` is pinned because it was the known working local version during PR #27 validation, but `pip install -r requirements.txt` warned that this candidate is yanked upstream. Do not change it incidentally inside UI/demo PRs; open a focused dependency cleanup issue or PR if replacing it.
 
 ---
 
