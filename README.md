@@ -298,7 +298,7 @@ This repo is meant for **local experiments**, not production.
 
 ## Roadmap / ideas
 
-Phase 1A demo polish is complete. The next phase is Phase 1B operational closeout, starting with GitHub Actions CI for pytest. Full sequencing for Phase 1B, Phase 1C, and Phase 2 lives in `docs/03-roadmap.md`.
+Phase 1A demo polish and Phase 1B technical closeout are complete. #20 walkthrough video and screenshot recipe remains open, but is intentionally deferred to a future brand/content walkthrough session. Phase 1C may begin with #18 Streamlit Community Cloud deployment prep. True Phase 2 remains reserved for model/speed/API refactor work. Full sequencing lives in `docs/03-roadmap.md`.
 
 If you experiment with the repo and find issues or ideas, feel free to open GitHub Issues or PRs.
 
