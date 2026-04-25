@@ -110,8 +110,12 @@ policy-dispute-ai-assistant/
 │  └─ app_v0_minimul.py      # Original single-page prototype (kept for reference)
 │
 ├─ data/
+│  ├─ raw_policies/          # Local policy PDFs for CLI runs (gitignored)
+│  ├─ raw_denials/           # Local denial inputs for CLI runs (gitignored)
+│  ├─ uploads/               # Streamlit upload cache (gitignored)
 │  ├─ processed/             # Local generated JSON + Markdown outputs (gitignored)
-│  └─ uploads/               # Local upload cache (gitignored)
+│  ├─ processed_safe/        # SAFE_MODE generated outputs (gitignored)
+│  └─ claims.db              # Local claim history SQLite DB (gitignored)
 │
 ├─ docs/                     # Durable project docs, screenshots, and archived notes
 ├─ notebooks/                # Experimental notebooks / scratchpads

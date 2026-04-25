@@ -40,7 +40,10 @@ The UI renders this structure in tabs and offers Markdown and Word downloads. Al
 
 ## Local Artifacts
 
+Root `data/` is the canonical local runtime artifact location.
+
 - `data/uploads/` holds local upload cache files.
 - `data/processed/` and `data/processed_safe/` hold local generated outputs.
 - `data/claims.db` stores local claim history.
+- `frontend/data/` is not used by the current app or backend; if present, it is a stale local artifact from older runs.
 - Runtime artifacts and real client data should not be committed.

@@ -62,6 +62,19 @@ Do not rebuild this bundle from real client claim data.
 
 ---
 
+## Local Runtime Artifacts
+
+The canonical local artifact location is the repository-root `data/` directory:
+
+- `data/uploads/` for Streamlit upload cache files
+- `data/processed/` for normal generated summaries and reports
+- `data/processed_safe/` for `SAFE_MODE=true` generated outputs
+- `data/claims.db` for local claim history
+
+`frontend/data/` is a stale artifact path from earlier local runs. It is not read by the current app or backend and can be removed if it appears.
+
+---
+
 ## Troubleshooting
 
 ### Streamlit boots but errors when demo mode is on
