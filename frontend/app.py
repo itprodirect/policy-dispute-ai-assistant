@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 demo_api = importlib.import_module("src.demo_api")
+config = importlib.import_module("src.config")
 pdf_loader = importlib.import_module("src.pdf_loader")
 summarizer_frontier = importlib.import_module("src.summarizer_frontier")
 report_builder = importlib.import_module("src.report_builder")
@@ -23,6 +24,7 @@ database = importlib.import_module("src.database")
 sectioning = importlib.import_module("src.sectioning")
 citation_linking = importlib.import_module("src.citation_linking")
 
+is_demo_force_on = config.is_demo_force_on
 run_policy_analysis = demo_api.run_policy_analysis
 load_pdf_text = pdf_loader.load_pdf_text
 build_denial_aware_report = summarizer_frontier.build_denial_aware_report
@@ -678,6 +680,12 @@ def _run_full_analysis(
       - call build_denial_aware_report
       - render Markdown dispute report
     """
+    if is_demo_force_on():
+        raise RuntimeError(
+            "Live analysis is disabled while DEMO_FORCE_ON=true. "
+            "Run locally with DEMO_FORCE_ON=false to use file uploads."
+        )
+
     progress_bar = st.progress(0)
     status = st.empty()
 
@@ -754,6 +762,14 @@ def _run_full_analysis(
 
 def _render_intake_form() -> None:
     st.header("New claim")
+
+    if is_demo_force_on():
+        st.info(
+            "This hosted demo runs in deterministic Demo Mode. "
+            "Live analysis and file uploads are disabled here; run the project "
+            "locally with DEMO_FORCE_ON=false for the full workflow."
+        )
+        return
 
     st.caption(
         "Upload a homeowners policy and denial letter as PDFs. "
@@ -1020,10 +1036,19 @@ produces a structured A–G dispute summary.
 """
     )
 
+    demo_force_on = is_demo_force_on()
     if st.session_state.get(SESSION_KEY_DEMO_MODE):
-        st.info(
-            "Demo Mode is ON. Loading deterministic demo assets with zero API calls."
-        )
+        if demo_force_on:
+            st.warning(
+                "Public demo safety mode is enabled. This hosted demo runs in "
+                "deterministic Demo Mode, so live analysis and file uploads are "
+                "disabled. For the full upload workflow, run the project locally "
+                "with DEMO_FORCE_ON=false."
+            )
+        else:
+            st.info(
+                "Demo Mode is ON. Loading deterministic demo assets with zero API calls."
+            )
         _load_demo_into_session()
         _render_results_section()
         return
@@ -1042,12 +1067,33 @@ def main() -> None:
 
     # Sidebar navigation
     st.sidebar.title("Navigation")
+    demo_force_on = is_demo_force_on()
     current_demo = st.session_state.get(SESSION_KEY_DEMO_MODE, False)
-    demo_mode = st.sidebar.toggle(
-        "Demo Mode (offline)",
-        value=current_demo,
-        help="Load deterministic demo assets with zero API calls.",
-    )
+
+    if demo_force_on:
+        demo_mode = True
+        if not current_demo:
+            for key in [
+                SESSION_KEY_POLICY,
+                SESSION_KEY_DISPUTE,
+                SESSION_KEY_SECTION_MAP,
+                SESSION_KEY_CLAIM_METADATA,
+            ]:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.session_state[SESSION_KEY_SELECTED_CLAIM] = None
+        st.session_state[SESSION_KEY_DEMO_MODE] = True
+        st.sidebar.info(
+            "Public demo safety mode is locked on. Uploads and live analysis "
+            "are disabled; run locally with DEMO_FORCE_ON=false for the full workflow."
+        )
+    else:
+        demo_mode = st.sidebar.toggle(
+            "Demo Mode (offline)",
+            value=current_demo,
+            help="Load deterministic demo assets with zero API calls.",
+        )
+
     if demo_mode != current_demo:
         st.session_state[SESSION_KEY_DEMO_MODE] = demo_mode
         for key in [
