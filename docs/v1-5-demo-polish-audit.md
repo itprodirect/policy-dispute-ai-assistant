@@ -1,6 +1,6 @@
 # v1.5 Demo Polish — Audit & Issue Plan
 
-**Status:** Audit + implementation plan. Foundation fixes #10 and #24 are complete; remaining items are implementation follow-ons.
+**Status:** Audit + implementation plan. Foundation fixes #10 and #24 are complete; Phase 1 demo-hardening issues #12, #13, #14, #16, and #17 are complete. Issue #15 remains open for README screenshots and repo first-impression polish.
 **Audience:** Codex 5.5 Pro implementation, plus reviewers converting items into GitHub issues.
 **Goal:** Take the existing internal Streamlit prototype and turn it into something that holds up under a portfolio screenshot, a 60–90 second walkthrough video, and a selective live demo — without rewriting the backend.
 
@@ -11,9 +11,9 @@
 ### 1.1 What works now
 - **End-to-end pipeline is real.** PDF → sectioning → per-section LLM summary → denial-aware A–G report (`src/summarizer_frontier.py`, `src/demo_api.py`).
 - **A–G dispute report is structurally sound.** Pydantic-style dataclasses (`schemas.DisputeReport`) cover all 7 sections, and both Markdown and `.docx` renderers exist (`src/report_builder.py`).
-- **Streamlit v1 UX is fairly complete.** Sidebar nav, intake form, 4-step progress bar, results hero with key takeaways, A–G tabs, downloadable Markdown + Word, claim history page (SQLite at `data/claims.db`).
+- **Streamlit v1 UX is fairly complete.** Sidebar nav, value-prop intake page, `st.status`-style 4-step progress, results hero with key takeaways, A–G tabs, Confidence tab, downloadable Markdown + Word, claim history page, and Recent claims entry point (SQLite at `data/claims.db`).
 - **Citation linking is implemented.** `src/citation_linking.py` matches A–G citations back to raw section text and surfaces "View source" expanders in live runs (`tests/test_citation_linking.py` covers the matching logic).
-- **Demo Mode toggle exists.** Sidebar switch in `frontend/app.py` loads deterministic demo files with zero API calls — the scaffolding is there.
+- **Demo Mode and hosted-demo safety exist.** Sidebar Demo Mode loads deterministic demo files with zero API calls; `DEMO_FORCE_ON=true` locks hosted demos to that path, disables uploads/live analysis, and boots without `OPENAI_API_KEY`.
 - **Privacy hygiene is present.** `SAFE_MODE` and `PERSIST_RAW_TEXT` flags in `src/config.py` route outputs to `data/processed_safe/` and strip raw text before returning to the UI.
 - **Telemetry hooks are wired.** Optional W&B logging via `src/wandb_telemetry.py` (claim-level rollups, A–G presence metrics) — useful but off by default.
 - **Disclaimers are present** in three places (intake page markdown, results page caption, rendered Markdown/Word reports) — framing is not legal advice.
@@ -30,20 +30,22 @@
 - 🔴 **No sample input PDFs are tracked.** `data/raw_policies/` and `data/raw_denials/` are gitignored. A first-time visitor cannot do a real "upload and run" demo without bringing their own PDFs.
 - ✅ **`.env.example` is now safe by default.** PR [#27](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/27) changed `PERSIST_RAW_TEXT=false` and documented that `SAFE_MODE=true` strips raw text even if persistence is changed.
 - ✅ **`requirements.txt` now pins direct runtime dependencies.** PR [#27](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/27) added exact pins for the working local versions.
-- 🟡 **Page title is wordy:** *"Policy Dispute AI – Claim A–G Demo"*. The hero immediately repeats the same string.
-- 🟡 **No "30-second understanding" hero.** First-time visitors land on a generic upload form. There's no value-prop card, no example claim, no walkthrough teaser.
-- 🟡 **Confidence/debug tab dumps raw JSON.** Useful for dev, ugly for screenshots — raw `dispute_report` JSON is the default rendering for tab #4.
+- ✅ **Hosted demo safety is in place.** `DEMO_FORCE_ON=true` locks the app to deterministic Demo Mode, disables uploads/live analysis, and no longer requires `OPENAI_API_KEY`.
+- ✅ **New Claim has a 30-second value proposition.** The page now frames what the tool does, who it is for, and what it is not, with research-prototype / not-legal-advice framing.
+- ✅ **Confidence/debug no longer dumps raw JSON by default.** The tab is now **Confidence**, with raw A-G JSON and artifact details behind collapsed developer expanders.
+- ✅ **Live-analysis progress is cleaner.** The live workflow uses a single `st.status`-style block with explicit Step 1/4 through Step 4/4 labels.
+- ✅ **Recent claims entry point exists.** The New Claim page shows up to two Recent claims when local history exists and reuses the existing Claim History detail view.
 - 🟡 **Hero takeaways are weak.** The "Key takeaways" picker just grabs the first 3 items from coverage_highlights, then dispute_angles. No prioritization, no insurer-name display, no claim-context summary.
-- 🟡 **Demo Mode UI is buried.** It's a sidebar toggle with a generic `st.info` banner. For a portfolio viewer who lands on the page, "click here to see the demo" should be the dominant CTA.
 - 🟡 **No README screenshots.** README references screenshots "in the GitHub PR and issues" but the repo itself has zero embedded images. The GitHub repo card is text-only.
 - 🟡 **`frontend/data/processed/`** exists as a stale duplicate (gitignored, but leftover from a prior `cwd` issue). Small code-hygiene smell.
 - 🟡 **No CI / no badges.** No GitHub Actions; tests aren't being verified on push.
 
 ### 1.4 What's missing for a smooth live demo
 - A *one-click* "Try this with the bundled sample claim" path that uses real PDFs already in the repo.
-- A `DEMO_FORCE_ON` env so a hosted demo can disable the Live Mode/upload path entirely (no API key needed, no abuse risk).
-- Deterministic, *real* dispute artifacts in the demo bundle (full A–G with denial reasons populated).
-- A short walkthrough script + screenshot recipe so re-shoots are deterministic.
+- README screenshots and first-impression polish (#15 remains open).
+- Curated screenshot assets; add `docs/screenshots/` later only if selected screenshots are committed.
+- A real Confidence tab screenshot if the saved capture set does not already include one.
+- One live API-backed analysis run before release/demo recording to visually confirm the progress UI.
 
 ### 1.5 Architectural notes (not problems, just context)
 - The pipeline is OpenAI-only via `chat.completions` with `response_format=json_object` (`src/llm_client.py`). Fine for v1.5; no change needed.
@@ -184,7 +186,7 @@ python -c "import streamlit, openai, pypdf, docx, dotenv; print('OK')"
 
 ### P1 — High-leverage UX & screenshot polish
 
-#### Issue P1-1 — Add `DEMO_FORCE_ON` env flag for hosted demos ([#12](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/12))
+#### Issue P1-1 — Add `DEMO_FORCE_ON` env flag for hosted demos ([#12](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/12)) — Completed
 
 **Priority:** P1
 **Type:** code
@@ -217,7 +219,7 @@ DEMO_FORCE_ON=true streamlit run frontend/app.py
 
 ---
 
-#### Issue P1-2 — Hero polish + 30-second value prop ([#13](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/13))
+#### Issue P1-2 — Hero polish + 30-second value prop ([#13](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/13)) — Completed
 
 **Priority:** P1
 **Type:** design + code
@@ -244,13 +246,13 @@ DEMO_FORCE_ON=true streamlit run frontend/app.py
 
 ---
 
-#### Issue P1-3 — Clean up Confidence / Debug tab ([#14](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/14))
+#### Issue P1-3 — Clean up Confidence / Debug tab ([#14](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/14)) — Completed
 
 **Priority:** P1
 **Type:** code
 **Codex-safe:** ✅ yes
 
-**Why it matters:** Tab #4 (`Confidence / debug`) currently dumps raw `dispute_report` JSON. That's a debug surface, not a screenshot surface. Confidence/G content is currently buried inside the A–G tab's expander.
+**Why it mattered:** Tab #4 (`Confidence / debug`) previously dumped raw `dispute_report` JSON. The completed cleanup made the tab screenshot-ready while keeping raw A-G JSON available in collapsed developer expanders.
 
 **Scope:**
 - Rename the tab to **"Confidence"** (drop "/ debug").
@@ -301,7 +303,7 @@ DEMO_FORCE_ON=true streamlit run frontend/app.py
 
 ---
 
-#### Issue P1-5 — Tighten progress UI and step labels ([#16](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/16))
+#### Issue P1-5 — Tighten progress UI and step labels ([#16](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/16)) — Completed
 
 **Priority:** P1
 **Type:** code
@@ -326,7 +328,7 @@ DEMO_FORCE_ON=true streamlit run frontend/app.py
 
 ---
 
-#### Issue P1-6 — Add "Recent runs" sample card on intake page ([#17](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/17))
+#### Issue P1-6 — Add "Recent runs" sample card on intake page ([#17](https://github.com/itprodirect/policy-dispute-ai-assistant/issues/17)) — Completed
 
 **Priority:** P1
 **Type:** code (small)
@@ -497,18 +499,20 @@ Foundation completed:
 
 1. ✅ **P0-1** Track demo assets + ship real dispute bundle. Completed in PR [#25](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/25).
 2. ✅ **P0-3** Fix `.env.example` + pin `requirements.txt`. Completed in PR [#27](https://github.com/itprodirect/policy-dispute-ai-assistant/pull/27).
+3. ✅ **#12 / P1-1** Add `DEMO_FORCE_ON` for hosted demo safety.
+4. ✅ **#13 / P1-2** Polish hero and 30-second value proposition.
+5. ✅ **#14 / P1-3** Clean up Confidence tab/debug JSON.
+6. ✅ **#16 / P1-5** Tighten analysis progress UI.
+7. ✅ **#17 / P1-6** Add Recent claims card.
 
-Next recommended implementation sequence from the current `main` branch:
+Next recommended follow-up sequence from the current `main` branch:
 
-1. **#11 / P0-2** Add tracked sample claim PDFs and "Try with sample" button.
-2. **#12 / P1-1** Add `DEMO_FORCE_ON` for hosted demo safety.
-3. **#13 / P1-2** Polish hero and 30-second value proposition.
-4. **#14 / P1-3** Clean up Confidence tab/debug JSON.
-5. **#16 / P1-5** Tighten analysis progress UI.
-6. **#18 / P2-1** Prepare Streamlit Community Cloud deployment.
-7. **#20 / P2-3** Add screenshot/video walkthrough recipe.
+1. **#15 / P1-4** README screenshots and repo first-impression polish. Screenshots were captured separately and should be curated before committing any assets.
+2. **#18 / P2-1** Prepare Streamlit Community Cloud deployment.
+3. **#20 / P2-3** Add screenshot/video walkthrough recipe.
+4. **#11 / P0-2** Add tracked sample claim PDFs and "Try with sample" button, if a true live sample-input path is still desired.
 
-Keep #11 first unless hosting becomes the immediate priority; the sample path is the next blocker for a compelling live walkthrough.
+Do not close #15 until README screenshots are actually selected, committed, and rendered correctly on GitHub.
 
 ---
 
@@ -518,14 +522,14 @@ Keep #11 first unless hosting becomes the immediate priority; the sample path is
 - [ ] Run with the polished UI (after P1-2/3/5).
 - [ ] Browser at **1440 × 900** (good GitHub README aspect ratio) or **1920 × 1080** for video.
 - [ ] Streamlit "wide" layout enabled (already is — `st.set_page_config(layout="wide")`).
-- [ ] Use the bundled sample claim (P0-2) so output is deterministic.
+- [ ] Use deterministic Demo Mode for zero-API screenshots, or run one live API-backed analysis with valid local PDFs when capturing the progress UI.
 - [ ] Light theme — don't ship a dark-mode screenshot if README is light.
 - [ ] Hide the browser bookmarks bar; hide any extension icons that contain personal info.
-- [ ] Empty `data/claims.db` so Claim History page shows the "Recent claims" example, not a developer's accumulated test runs.
+- [ ] Use a clean/sanitized `data/claims.db` for Claim History / Recent claims shots; do not show a developer's accumulated test runs.
 
 ### 5.2 Required shots
 1. **Landing / intake**: hero with value prop card, "Try with sample" button visible.
-2. **Mid-analysis**: `st.status` block with Step 3/4 highlighted (live capture during a real run).
+2. **Mid-analysis**: `st.status` block with Step 3/4 highlighted (live capture during a real API-backed run).
 3. **Results hero**: confidence metric visible, plain-language overview, key takeaways, both download buttons.
 4. **A–G dispute tab**: section B and C expanded, citation accordions visible.
 5. **Citation expander expanded**: showing real policy section text under "View source".
@@ -535,7 +539,7 @@ Keep #11 first unless hosting becomes the immediate priority; the sample path is
 
 ### 5.3 Walkthrough video (60–90s)
 - 0–10s: README/landing → "Try with sample" click.
-- 10–30s: progress bar runs (live), Results hero appears.
+- 10–30s: `st.status` progress flow runs (live), Results hero appears.
 - 30–55s: scroll through A–G tabs, click a "View source" accordion.
 - 55–75s: hit "Download as Word", open the file, scroll once.
 - 75–90s: cut back to README, point at the disclaimer + GitHub link.
@@ -567,22 +571,22 @@ Keep #11 first unless hosting becomes the immediate priority; the sample path is
 
 ---
 
-## 7. Recommended next implementation PRs
+## 7. Recommended next PRs
 
-### Recommended next implementation PR — **#11 / P0-2: Sample PDFs + "Try with sample" button**
+### Recommended next PR — **#15 / P1-4: README screenshots + first-impression polish**
 
-**Why next:** Demo Mode and dependency reproducibility are now fixed. The next bottleneck is "I can't actually try the live pipeline without bringing my own PDFs." Solving that turns every README visitor into a potential live-demo user and gives the walkthrough video something real to film.
+**Why next:** The Phase 1 code hardening is complete, but the GitHub repo still needs curated screenshots to show the polished New Claim page, Results hero, A-G structure, and clean Confidence tab. Screenshots were captured separately; this follow-up should select, sanitize, and wire them into the README.
 
 **Concrete first steps for the implementer:**
-1. Confirm candidate sample inputs contain no real client data or PII.
-2. Add tracked sample assets under `assets/samples/`.
-3. Add the "Try with sample claim" button on the New Claim page.
-4. Run the same code path as a normal upload.
-5. Keep the UI copy clear that the sample is synthetic/regulator-filed and not legal advice.
+1. Review the saved screenshot set and discard anything with personal data, noisy browser chrome, raw JSON, or stale UI.
+2. Capture a real Confidence tab screenshot if it is missing.
+3. Add `docs/screenshots/` only if selected screenshots are being committed.
+4. Update `README.md` with inline images and concise first-impression copy.
+5. Before final release/demo recording, run one live API-backed analysis with valid PDFs to visually confirm the progress UI.
 
-### Recommended follow-up implementation PR — **#12 / P1-1: `DEMO_FORCE_ON` hosted demo safety**
+### Optional later PR — **#11 / P0-2: Sample PDFs + "Try with sample" button**
 
-**Why second:** Once the sample path exists, `DEMO_FORCE_ON` makes the hosted demo safe by disabling uploads and API calls on public infrastructure.
+**Why later:** Local mode still supports full uploads, and hosted demos are safe through `DEMO_FORCE_ON`. A tracked sample-input path would make live pipeline demos easier, but it requires careful sample document curation and is separate from the Phase 1 hardening wrap.
 
 ---
 
@@ -591,6 +595,7 @@ Keep #11 first unless hosting becomes the immediate priority; the sample path is
 - ❌ **Do NOT add user authentication.** This is a portfolio demo; auth is overkill, makes hosting harder, and signals "trying too hard."
 - ❌ **Do NOT introduce a server-side database** (Postgres, Supabase, etc.). The existing SQLite is fine for the demo workflow.
 - ❌ **Do NOT rewrite the frontend in Next.js / React.** The Streamlit frontend works, the value is in the A–G logic, and a rewrite is a multi-week distraction with no portfolio upside.
+- ❌ **Do NOT treat Phase 1 as model/API modernization.** No LLM prompt changes, report schema changes, Responses/API migration, or backend architecture rebuild were part of the demo-hardening pass.
 - ❌ **Do NOT add new policy form support** (HO5, HO6, commercial forms). v1.5 is polish, not coverage expansion.
 - ❌ **Do NOT add legal-advice claims, attorney listings, jurisdiction matchmaking, or "guaranteed outcomes" copy.** The "not legal advice" framing must stay front and center.
 - ❌ **Do NOT commit any real client documents**, even sanitized ones. Use regulator-filed forms (HO3 ISO, USAA OPIC, TRUE FL) and synthetic denials only.
