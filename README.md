@@ -2,7 +2,7 @@
 
 AI assistant for turning homeowners policies and denial letters into dispute‑focused summaries (A–G structure) for public adjusters and attorneys.
 
-> **Status:** Internal prototype / demo
+> **Status:** Internal prototype / demo, with Phase 1 demo-hardening complete
 >
 > **Frontend:** Streamlit v1 UX (`frontend/app.py`)
 >
@@ -36,12 +36,12 @@ Given:
 
 5. **Renders the results in a Streamlit UI** with:
 
-   - A “New claim” upload flow and progress bar (steps 1–4)
+   - A “New claim” upload flow with research / not-legal-advice framing, step-based progress status, and a compact Recent claims section when local history exists
    - A **Results** screen with:
 
      - Hero summary (plain‑language story + key takeaways)
      - Downloadable Markdown report
-     - Tabs for Dispute summary (A–G), Policy highlights, Denial reasons & angles, and Confidence / debug.
+     - Tabs for Dispute summary (A–G), Policy highlights, Denial reasons & angles, and Confidence.
 
 The goal is to give a **fast triage view** for busy professionals, not to replace full policy / case review.
 
@@ -49,10 +49,11 @@ The goal is to give a **fast triage view** for busy professionals, not to replac
 
 ## Screenshots (v1 UX)
 
-The repo’s GitHub PR and issues contain screenshots of:
+Screenshots were captured separately during Phase 1 and will be curated in a later README polish pass. Issue #15 remains open for inline README screenshots and first-impression polish.
 
-- **New claim flow** – upload policy + denial PDFs, optional nickname and state, step 1–4 progress bar.
+- **New claim flow** – upload policy + denial PDFs, optional nickname and state, step-based status UI.
 - **Results view** – A–G dispute summary, policy highlight checklist, denial reasons & angles, download button.
+- **Confidence view** – confidence score, notes, and verification clauses with raw debug JSON hidden by default.
 
 ---
 
@@ -163,6 +164,8 @@ The bundled demo-safe dispute report lives in:
 
 These tracked files are deterministic demo artifacts, not real client claim data.
 
+For hosted demos, set `DEMO_FORCE_ON=true`. This locks the app to deterministic Demo Mode, disables file uploads and live analysis, and allows the app to boot without `OPENAI_API_KEY`. Keep `DEMO_FORCE_ON=false` for normal local development and the full upload + LLM workflow.
+
 ### New claim flow
 
 1. Go to the **New claim** page (default).
@@ -177,14 +180,16 @@ These tracked files are deterministic demo artifacts, not real client claim data
    - **Denial letter PDF** – corresponding denial for this claim.
 
 4. Click **Analyze claim**.
-5. Watch the bottom status bar as the app walks through:
+5. Watch the status block as the app walks through:
 
-   - Step 1/4 – Analyzing policy PDF
-   - Step 2/4 – Analyzing denial letter
-   - Step 3/4 – Building A–G dispute report
-   - Step 4/4 – Done
+   - Step 1/4: Analyzing policy
+   - Step 2/4: Reading denial letter
+   - Step 3/4: Building dispute analysis
+   - Step 4/4: Preparing outputs
 
 6. When complete, the page scrolls to the **Results** section.
+
+If local claim history exists, the New Claim page also shows up to two **Recent claims** cards. Their **View** actions reuse the existing Claim History detail view and do not expose raw claim text or report JSON.
 
 ### Results view
 
@@ -204,7 +209,9 @@ The results page is split into:
   - **Dispute summary (A–G)** – structured expanders for A–G with inline citations
   - **Policy highlights** – checklist view of helpful provisions vs exclusions
   - **Denial reasons** – bullet list of carrier’s reasons mapped to policy concepts
-  - **Confidence / debug** – meta notes and flags where the model is less confident
+  - **Confidence** – confidence score, notes, and clauses to double-check
+
+Raw A–G JSON and artifact/debug details remain available for developers inside collapsed expanders, but are hidden by default for screenshots and demos.
 
 Under the A–G tab there is an optional **“Full policy breakdown”** section that can show more verbose policy summaries when needed.
 
@@ -259,10 +266,11 @@ This repo is meant for **local experiments**, not production.
 
 Some obvious next steps:
 
+- **README screenshots and first-impression polish** – issue #15 remains open; curate saved screenshots later and add `docs/screenshots/` only if selected screenshots are committed.
+- **Final demo QA** – capture a real Confidence tab screenshot if missing and run one API-backed live analysis before release/demo recording to visually confirm the progress UI.
 - **Better HO3 coverage & carrier diversity** – tune sectioning + prompts across more forms.
 - **State‑aware guidance** – use the `state` field to condition dispute angles.
-- **Multi‑claim workspace** – basic history of recent analyses.
-- ** richer policy / denial upload validation** – catch wrong file types, corrupt PDFs, etc.
+- **Richer policy / denial upload validation** – catch wrong file types, corrupt PDFs, etc.
 - **Export templates** – Word / Docs templates for CRNs, dispute letters, or attorney memos.
 
 If you experiment with the repo and find issues or ideas, feel free to open GitHub Issues or PRs.
