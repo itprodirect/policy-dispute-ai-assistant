@@ -550,9 +550,60 @@ def _render_hero(
         )
 
 
+def _render_confidence_content(dispute_report: Dict[str, Any]) -> None:
+    """Render confidence metadata without exposing raw report JSON."""
+    conf = dispute_report.get("confidence") or {}
+    score = conf.get("score")
+    notes = str(conf.get("notes", "") or "").strip()
+    verify_clauses = conf.get("verify_clauses") or []
+
+    st.markdown("### Confidence")
+
+    if score is not None:
+        try:
+            st.metric("Confidence score", f"{float(score):.2f}")
+        except (TypeError, ValueError):
+            st.write(f"**Confidence score:** {score}")
+
+    if notes:
+        st.markdown("#### Notes")
+        st.write(notes)
+
+    if verify_clauses:
+        st.markdown("#### Clauses / sections to double-check")
+        for clause in verify_clauses:
+            s = str(clause).strip()
+            if s:
+                st.markdown(f"- {s}")
+
+    if score is None and not notes and not verify_clauses:
+        st.info("No explicit confidence metadata provided by the model.")
+
+
+def _render_confidence_debug(
+    dispute_report: Dict[str, Any],
+    *,
+    policy_artifacts: Dict[str, Any] | None = None,
+    dispute_artifacts: Dict[str, Any] | None = None,
+) -> None:
+    with st.expander("Developer: raw A-G JSON", expanded=False):
+        st.json(dispute_report)
+
+    with st.expander("Developer: artifacts / advanced debug", expanded=False):
+        st.json(
+            {
+                "policy_artifacts": policy_artifacts or {},
+                "dispute_artifacts": dispute_artifacts or {},
+            }
+        )
+
+
 def _render_dispute_tabs(
     dispute_report: Dict[str, Any],
     section_map: Dict[str, str] | None = None,
+    *,
+    policy_artifacts: Dict[str, Any] | None = None,
+    dispute_artifacts: Dict[str, Any] | None = None,
 ) -> None:
     """Render the dispute report tabs with optional citation linking."""
     section_map = section_map or {}
@@ -562,7 +613,7 @@ def _render_dispute_tabs(
             "Dispute summary (A–G)",
             "Policy highlights",
             "Denial reasons",
-            "Confidence / debug",
+            "Confidence",
         ]
     )
 
@@ -680,10 +731,14 @@ def _render_dispute_tabs(
         st.markdown("#### Dispute angles (E)")
         _render_dispute_angles(dispute_report.get("dispute_angles"), section_map, key_prefix="den_e")
 
-    # Minimal JSON view
+    # Confidence and collapsed developer details
     with tab_debug:
-        st.markdown("### Raw A–G JSON (debug view)")
-        st.json(dispute_report)
+        _render_confidence_content(dispute_report)
+        _render_confidence_debug(
+            dispute_report,
+            policy_artifacts=policy_artifacts,
+            dispute_artifacts=dispute_artifacts,
+        )
 
 
 def _render_policy_breakdown(policy_result: Dict[str, Any]) -> None:
@@ -944,18 +999,15 @@ def _render_results_section() -> None:
     st.markdown("### Detailed dispute views")
     # Get section map from session state for citation linking
     section_map = st.session_state.get(SESSION_KEY_SECTION_MAP, {})
-    _render_dispute_tabs(dispute_report, section_map)
+    _render_dispute_tabs(
+        dispute_report,
+        section_map,
+        policy_artifacts=policy_result.get("artifacts", {}),
+        dispute_artifacts=dispute_result.get("artifacts", {}),
+    )
 
     st.markdown("### Full policy breakdown (optional)")
     _render_policy_breakdown(policy_result)
-
-    with st.expander("Artifacts / advanced debug", expanded=False):
-        st.json(
-            {
-                "policy_artifacts": policy_result.get("artifacts", {}),
-                "dispute_artifacts": dispute_result.get("artifacts", {}),
-            }
-        )
 
 
 def _render_claim_history_page() -> None:
@@ -1009,7 +1061,12 @@ def _render_claim_history_page() -> None:
 
             st.markdown("### Detailed dispute views")
             # Note: Section map not available for historical claims (in-memory only)
-            _render_dispute_tabs(dispute_report, section_map=None)
+            _render_dispute_tabs(
+                dispute_report,
+                section_map=None,
+                policy_artifacts=policy_result.get("artifacts", {}),
+                dispute_artifacts=dispute_result.get("artifacts", {}),
+            )
 
             if policy_result:
                 st.markdown("### Full policy breakdown (optional)")
