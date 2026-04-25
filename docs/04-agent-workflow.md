@@ -6,7 +6,7 @@ Use this workflow for Codex, Claude Code, and future agent sessions.
 
 - Pick one GitHub issue or one tightly scoped docs task.
 - Keep each branch and PR focused on that single concern.
-- Do not bundle Phase 2 work into docs cleanup, CI, deployment, prompt, schema, or model/API changes.
+- Do not bundle work across phases. Do not mix Phase 2 model/API refactor work into Phase 1B or Phase 1C PRs.
 
 ## Inspect Before Editing
 

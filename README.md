@@ -292,7 +292,7 @@ This repo is meant for **local experiments**, not production.
 
 ## Roadmap / ideas
 
-Phase 1 demo hardening is complete. Current Phase 2 sequencing lives in `docs/03-roadmap.md`; the next planned issue is GitHub Actions CI for pytest.
+Phase 1A demo polish is complete. The next phase is Phase 1B operational closeout, starting with GitHub Actions CI for pytest. Full sequencing for Phase 1B, Phase 1C, and Phase 2 lives in `docs/03-roadmap.md`.
 
 If you experiment with the repo and find issues or ideas, feel free to open GitHub Issues or PRs.
 
