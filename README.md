@@ -12,6 +12,18 @@ This repo is **not** a legal product. It is an educational / research tool for e
 
 ---
 
+## Preview
+
+The current v1 UX is a Streamlit research demo with explicit AI-generated / not-legal-advice framing, deterministic offline demo support, and a results view built for fast human triage.
+
+Screenshots below use bundled demo-safe artifacts, not real client claim data.
+
+| New claim framing | Results overview |
+| --- | --- |
+| <img src="docs/screenshots/01-app-overview-framing.png" alt="Policy Dispute AI new claim page with research prototype framing" width="420"> | <img src="docs/screenshots/04-results-overview.png" alt="Results overview showing dispute summary and review context" width="420"> |
+
+---
+
 ## What the app does
 
 Given:
@@ -49,11 +61,15 @@ The goal is to give a **fast triage view** for busy professionals, not to replac
 
 ## Screenshots (v1 UX)
 
-Screenshots were captured separately during Phase 1 and will be curated in a later README polish pass. Issue #15 remains open for inline README screenshots and first-impression polish.
+These screenshots are intended to show the current demo shape without implying production readiness, legal advice, or real-world claim outcomes.
 
-- **New claim flow** – upload policy + denial PDFs, optional nickname and state, step-based status UI.
-- **Results view** – A–G dispute summary, policy highlight checklist, denial reasons & angles, download button.
-- **Confidence view** – confidence score, notes, and verification clauses with raw debug JSON hidden by default.
+| View | Screenshot |
+| --- | --- |
+| **App overview and research framing** – first screen, target audience, and not-legal-advice positioning. | <img src="docs/screenshots/01-app-overview-framing.png" alt="Policy Dispute AI app overview with research prototype framing" width="520"> |
+| **New claim upload form** – policy PDF and denial letter upload workflow for local analysis. | <img src="docs/screenshots/02-new-claim-upload-form.png" alt="New claim upload form with policy PDF and denial letter PDF inputs" width="520"> |
+| **Public demo safety state** – hosted-demo mode with uploads and API calls disabled. | <img src="docs/screenshots/03-demo-safety-state.png" alt="Public demo safety mode showing uploads and live analysis disabled" width="520"> |
+| **Results overview** – deterministic demo report summary with review context and confidence. | <img src="docs/screenshots/04-results-overview.png" alt="Results overview with plain-language dispute summary and review context" width="520"> |
+| **Results actions and downloads** – key takeaways plus Word and Markdown export actions. | <img src="docs/screenshots/05-results-actions-downloads.png" alt="Results actions with key takeaways and download buttons" width="520"> |
 
 ---
 
