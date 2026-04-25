@@ -1,8 +1,8 @@
-python-dotenv
-pypdf
-tiktoken          # optional but helpful if you want token-aware chunking
-openai           # new SDK style; adjust version if needed
-rich             # nice CLI output (optional but useful)
-streamlit
-wandb            # optional LLM call logging
-python-docx      # Word document export
+python-dotenv==1.2.1
+pypdf==6.4.0
+tiktoken==0.12.0          # optional but helpful if you want token-aware chunking
+openai==2.8.1
+rich==14.2.0              # nice CLI output (optional but useful)
+streamlit==1.52.1
+wandb==0.24.0             # optional LLM call logging
+python-docx==1.2.0        # Word document export
