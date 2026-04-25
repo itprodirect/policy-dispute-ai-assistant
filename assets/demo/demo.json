@@ -1,0 +1,126 @@
+{
+  "policy_id": "HO3_USAA_TX_OPIC_2008",
+  "denial_id": "HO3_TRUE_FL_2021_denial",
+  "plain_summary": "The insureds reported water damage to their kitchen and living room nearly a month after the loss occurred. The insurer denied the claim citing late notice, damage caused by long-term leakage and wear and tear, pre-existing damage, failure to protect the property from further damage, and that the covered loss amount is below the deductible. The dispute centers on whether the damage qualifies as a covered sudden and accidental loss and whether policy conditions regarding notice and property protection were met.",
+  "coverage_highlights": [
+    {
+      "text": "Coverage for sudden and accidental direct physical damage to tangible property under Coverage A - Dwelling Protection.",
+      "citation": "COVERAGE A - DWELLING PROTECTION EXCEPT AS SPECIFICALLY PROVIDED IN SECTION I -"
+    },
+    {
+      "text": "Coverage for reasonable and necessary repairs to protect property from further damage after a covered loss under Additional Coverages.",
+      "citation": "ADDITIONAL COVERAGES"
+    },
+    {
+      "text": "Coverage for water damage caused by sudden and accidental discharge of water, subject to exclusions and conditions.",
+      "citation": "PROTECTION AND PERSONAL PROPERTY; DWELLING PROTECTION AND OTHER"
+    }
+  ],
+  "exclusions_limitations": [
+    {
+      "text": "Exclusion of loss caused by wear and tear, deterioration, and continuous or repeated seepage or leakage of water over time.",
+      "citation": "LOSSES WE DO NOT COVER UNDER DWELLING PROTECTION AND OTHER STRUCTURES"
+    },
+    {
+      "text": "Requirement for prompt notice of loss and cooperation with insurer’s investigation; late notice may result in denial.",
+      "citation": "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO; CONDITIONS"
+    },
+    {
+      "text": "Obligation of insured to protect property from further damage and make reasonable repairs after loss.",
+      "citation": "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO; ADDITIONAL COVERAGES"
+    },
+    {
+      "text": "Application of deductible to losses; insurer pays only amounts exceeding deductible.",
+      "citation": "DEDUCTIBLE"
+    }
+  ],
+  "denial_reasons": [
+    {
+      "text": "Late notice of the loss prevented timely inspection and investigation, prejudicing the insurer.",
+      "citation": "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO (Duties After Loss and Conditions sections)"
+    },
+    {
+      "text": "Damage resulted from long-term leakage and wear and tear, which are excluded under the policy.",
+      "citation": "LOSSES WE DO NOT COVER UNDER DWELLING PROTECTION AND OTHER STRUCTURES"
+    },
+    {
+      "text": "Some damage pre-existed the reported loss and the insured failed to take reasonable steps to protect the property from further damage.",
+      "citation": "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO; CONDITIONS"
+    },
+    {
+      "text": "The estimated covered damage after depreciation and exclusions is below the policy deductible, so no payment is owed.",
+      "citation": "DEDUCTIBLE"
+    }
+  ],
+  "dispute_angles": [
+    {
+      "text": "Whether the insured provided notice of loss within a reasonable or required timeframe and if late notice prejudiced the insurer.",
+      "citations": [
+        "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO",
+        "CONDITIONS"
+      ]
+    },
+    {
+      "text": "Whether the water damage was caused by a sudden and accidental event or by long-term leakage and wear and tear excluded by the policy.",
+      "citations": [
+        "LOSSES WE DO NOT COVER UNDER DWELLING PROTECTION AND OTHER STRUCTURES",
+        "PROTECTION AND PERSONAL PROPERTY"
+      ]
+    },
+    {
+      "text": "Whether any damage pre-existed the loss date and how pre-existing damage affects coverage.",
+      "citations": [
+        "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO",
+        "CONDITIONS"
+      ]
+    },
+    {
+      "text": "Whether the insured took reasonable and necessary steps to protect the property from further damage after the loss.",
+      "citations": [
+        "ADDITIONAL COVERAGES",
+        "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO"
+      ]
+    },
+    {
+      "text": "Whether the estimated covered damage exceeds the deductible after depreciation and exclusions.",
+      "citations": [
+        "DEDUCTIBLE"
+      ]
+    },
+    {
+      "text": "Clarification of what constitutes 'wear and tear' and 'long-term leakage' versus sudden accidental discharge of water.",
+      "citations": [
+        "DEFINITIONS",
+        "LOSSES WE DO NOT COVER UNDER DWELLING PROTECTION AND OTHER STRUCTURES"
+      ]
+    },
+    {
+      "text": "Whether microbial damage or mold resulting from water intrusion is covered if caused by a covered peril.",
+      "citations": [
+        "SECTION I - LOSSES WE DO NOT COVER 1.I. MICROBIAL ORGANISMS , INCLUDING BUT NOT"
+      ]
+    }
+  ],
+  "missing_info": [
+    "Exact date and manner of initial notice to insurer by the insured.",
+    "Detailed timeline and documentation of any emergency mitigation or repairs performed after the loss.",
+    "Complete plumber’s report and inspection findings with photos and dates.",
+    "Home inspection report and contractor estimates showing pre-existing damage.",
+    "Policy declarations page showing deductible amounts and coverage limits.",
+    "Any correspondence or communications between insured and insurer regarding the claim.",
+    "Detailed inventory or proof of damaged property and repair estimates.",
+    "Policy endorsements or amendments that might affect water damage or notice requirements."
+  ],
+  "confidence": {
+    "score": 0.9,
+    "notes": "The denial letter clearly cites policy conditions and exclusions that align with the summarized policy sections. The main issues of late notice, wear and tear exclusion, pre-existing damage, and deductible application are well supported by the policy summaries. However, some ambiguity remains regarding the exact timing and nature of the loss and insured actions, which affects certainty.",
+    "verify_clauses": [
+      "COVERAGE F - OR YOUR LOSS IF YOU FAIL TO",
+      "LOSSES WE DO NOT COVER UNDER DWELLING PROTECTION AND OTHER STRUCTURES",
+      "DEDUCTIBLE",
+      "ADDITIONAL COVERAGES",
+      "PROTECTION AND PERSONAL PROPERTY",
+      "SECTION I - LOSSES WE DO NOT COVER 1.I. MICROBIAL ORGANISMS , INCLUDING BUT NOT"
+    ]
+  }
+}

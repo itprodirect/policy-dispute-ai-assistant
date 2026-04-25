@@ -50,7 +50,7 @@ SESSION_KEY_SELECTED_CLAIM = "selected_claim_id"
 SESSION_KEY_SECTION_MAP = "section_text_map"
 SESSION_KEY_DEMO_MODE = "demo_mode"
 
-DEMO_ASSET_DIR = Path("data/processed/demo")
+DEMO_ASSET_DIR = ROOT / "assets" / "demo"
 DEMO_JSON_PATH = DEMO_ASSET_DIR / "demo.json"
 DEMO_MD_PATH = DEMO_ASSET_DIR / "demo.report.md"
 
@@ -73,16 +73,10 @@ def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
 
 def _demo_asset_instructions() -> str:
     return (
-        "Demo assets not found. Create them by copying a known sample:\n"
-        "1) data/processed/HO3_ISO_1999_III_SAMPLE__1768603155.json -> "
-        "data/processed/demo/demo.json\n"
-        "2) data/processed/HO3_ISO_1999_III_SAMPLE__1768603155.report.md -> "
-        "data/processed/demo/demo.report.md\n"
-        "Alternate (dispute report only):\n"
-        "1) data/processed/HO3_USAA_TX_OPIC_2008__HO3_TRUE_FL_2021_denial.dispute.json -> "
-        "data/processed/demo/demo.json\n"
-        "2) data/processed/HO3_USAA_TX_OPIC_2008__HO3_TRUE_FL_2021_denial.dispute.md -> "
-        "data/processed/demo/demo.report.md"
+        "Demo assets not found. Expected tracked demo files at:\n"
+        f"1) {DEMO_JSON_PATH.relative_to(ROOT)}\n"
+        f"2) {DEMO_MD_PATH.relative_to(ROOT)}\n"
+        "Restore these files from the repository or see RUNBOOK.md for Demo Mode setup."
     )
 
 
