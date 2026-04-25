@@ -1,3 +1,5 @@
+Archived note: This document is preserved for project history. It may contain stale issue status or paths. See docs/01-current-state.md and docs/03-roadmap.md for current status.
+
 # v1.5 Demo Polish — Audit & Issue Plan
 
 **Status:** Audit + implementation plan. Foundation fixes #10 and #24 are complete; Phase 1 demo-hardening issues #12, #13, #14, #16, and #17 are complete. Issue #15 remains open for README screenshots and repo first-impression polish.

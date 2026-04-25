@@ -73,6 +73,17 @@ These screenshots are intended to show the current demo shape without implying p
 
 ---
 
+## Project docs
+
+For current project status, architecture, roadmap, and agent workflow notes, start with:
+
+- `docs/01-current-state.md`
+- `docs/02-architecture.md`
+- `docs/03-roadmap.md`
+- `docs/04-agent-workflow.md`
+
+---
+
 ## Repo structure
 
 ```text
@@ -100,6 +111,7 @@ policy-dispute-ai-assistant/
 │  ├─ processed/             # Local generated JSON + Markdown outputs (gitignored)
 │  └─ uploads/               # Local upload cache (gitignored)
 │
+├─ docs/                     # Durable project docs, screenshots, and archived notes
 ├─ notebooks/                # Experimental notebooks / scratchpads
 ├─ .env.example              # Sample env vars
 ├─ requirements.txt          # Python dependencies
@@ -280,14 +292,7 @@ This repo is meant for **local experiments**, not production.
 
 ## Roadmap / ideas
 
-Some obvious next steps:
-
-- **README screenshots and first-impression polish** – issue #15 remains open; curate saved screenshots later and add `docs/screenshots/` only if selected screenshots are committed.
-- **Final demo QA** – capture a real Confidence tab screenshot if missing and run one API-backed live analysis before release/demo recording to visually confirm the progress UI.
-- **Better HO3 coverage & carrier diversity** – tune sectioning + prompts across more forms.
-- **State‑aware guidance** – use the `state` field to condition dispute angles.
-- **Richer policy / denial upload validation** – catch wrong file types, corrupt PDFs, etc.
-- **Export templates** – Word / Docs templates for CRNs, dispute letters, or attorney memos.
+Phase 1 demo hardening is complete. Current Phase 2 sequencing lives in `docs/03-roadmap.md`; the next planned issue is GitHub Actions CI for pytest.
 
 If you experiment with the repo and find issues or ideas, feel free to open GitHub Issues or PRs.
 
