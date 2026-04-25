@@ -57,6 +57,50 @@ DEMO_JSON_PATH = DEMO_ASSET_DIR / "demo.json"
 DEMO_MD_PATH = DEMO_ASSET_DIR / "demo.report.md"
 
 
+def _render_framing_badges() -> None:
+    st.markdown(
+        "**Research prototype** · **Not legal advice** · **AI-generated**"
+    )
+
+
+def _render_value_prop_intro() -> None:
+    st.markdown("### Policy dispute review, structured for faster triage")
+    st.caption(
+        "Upload a homeowners policy and denial letter to produce a focused A-G "
+        "review of coverage language, denial reasons, dispute angles, and missing information."
+    )
+
+    _render_framing_badges()
+
+    col_what, col_who, col_not = st.columns(3)
+    with col_what:
+        st.markdown("**What it does**")
+        st.write(
+            "Turns policy summaries and denial text into a structured dispute brief "
+            "with citations, next-step questions, and downloadable output."
+        )
+    with col_who:
+        st.markdown("**Who it is for**")
+        st.write(
+            "Claim reviewers, adjusters, and legal teams evaluating homeowners "
+            "coverage disputes and preparing for human review."
+        )
+    with col_not:
+        st.markdown("**What it is not**")
+        st.write(
+            "Not a coverage decision, legal advice, attorney service, or guarantee "
+            "of any claim outcome."
+        )
+
+    with st.expander("Important research framing", expanded=False):
+        st.write(
+            "This is an AI-generated analysis of policy language and a denial letter. "
+            "It is a research prototype for educational and workflow exploration. "
+            "It does not create coverage, rights, an attorney-client relationship, "
+            "or a substitute for professional judgment against the actual policy and claim file."
+        )
+
+
 def _save_denial_pdf(uploaded_file, claim_nickname: str | None = None) -> Path:
     """
     Save the uploaded denial letter PDF under data/uploads/ with a timestamped name.
@@ -428,6 +472,8 @@ def _render_hero(
     dispute_markdown: str,
     policy_label: str,
     denial_label: str,
+    policy_filename: str | None = None,
+    denial_filename: str | None = None,
 ) -> None:
     st.subheader("Dispute overview")
 
@@ -473,6 +519,18 @@ def _render_hero(
                 st.markdown(f"- {t}")
 
     with col_right:
+        confidence = dispute_report.get("confidence") or {}
+        score = confidence.get("score")
+
+        st.markdown("##### Review context")
+        st.write(f"**Policy file:** {policy_filename or policy_label}")
+        st.write(f"**Denial file:** {denial_filename or denial_label}")
+        if score is not None:
+            try:
+                st.metric("Confidence", f"{float(score):.2f}")
+            except (TypeError, ValueError):
+                st.write(f"**Confidence:** {score}")
+
         st.markdown("##### Actions")
         st.caption("Download the full A–G dispute write-up.")
         st.download_button(
@@ -872,12 +930,15 @@ def _render_results_section() -> None:
 
     policy_label = str(dispute_result.get("policy_id") or "policy")
     denial_label = str(dispute_result.get("denial_id") or "denial")
+    claim_metadata = st.session_state.get(SESSION_KEY_CLAIM_METADATA, {}) or {}
 
     _render_hero(
         dispute_report,
         dispute_result.get("markdown", "") or "",
         policy_label,
         denial_label,
+        policy_filename=claim_metadata.get("policy_filename"),
+        denial_filename=claim_metadata.get("denial_filename"),
     )
 
     st.markdown("### Detailed dispute views")
@@ -942,6 +1003,8 @@ def _render_claim_history_page() -> None:
                 dispute_result.get("markdown", "") or "",
                 policy_label,
                 denial_label,
+                policy_filename=claim.policy_filename,
+                denial_filename=claim.denial_filename,
             )
 
             st.markdown("### Detailed dispute views")
@@ -1026,15 +1089,7 @@ def _render_claim_history_page() -> None:
 
 def _render_new_claim_page() -> None:
     """Render the New Claim page."""
-    st.markdown(
-        """
-This internal demo ingests a homeowners policy PDF **and** a denial letter PDF and
-produces a structured A–G dispute summary.
-
-> **Important:** This is an AI-generated analysis of policy language and a denial letter.
-> It is **not** legal advice and does not create coverage, rights, or an attorney–client relationship.
-"""
-    )
+    _render_value_prop_intro()
 
     demo_force_on = is_demo_force_on()
     if st.session_state.get(SESSION_KEY_DEMO_MODE):
@@ -1059,11 +1114,11 @@ produces a structured A–G dispute summary.
 
 def main() -> None:
     st.set_page_config(
-        page_title="Policy Dispute AI – Claim A–G Demo",
+        page_title="Policy Dispute AI",
         layout="wide",
     )
 
-    st.title("Policy Dispute AI – Claim A–G Demo")
+    st.title("Policy Dispute AI")
 
     # Sidebar navigation
     st.sidebar.title("Navigation")
