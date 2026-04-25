@@ -1,3 +1,5 @@
+Archived note: This document is preserved for project history. It may contain stale issue status or paths. See docs/01-current-state.md and docs/03-roadmap.md for current status.
+
 # Session Wrap - 2026-04-25
 
 ## Completed foundation work

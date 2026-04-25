@@ -7,6 +7,12 @@
 - `data/` stores local runtime artifacts: `raw_policies/`, `raw_denials/`, `uploads/`, `processed/`, `processed_safe/`, and `claims.db`.
 - `docs/`, `README.md`, and `RUNBOOK.md` document workflow and operational notes.
 
+## Durable Project Docs
+- Start with `docs/01-current-state.md` for current phase/status and `docs/03-roadmap.md` for issue order.
+- Use `docs/02-architecture.md` for the current high-level architecture before proposing structural changes.
+- Use `docs/04-agent-workflow.md` for one-issue/one-PR workflow, docs-only boundaries, and session logging expectations.
+- Keep session logs lightweight; see `logs/README.md` and `logs/SESSION_TEMPLATE.md`.
+
 ## Build, Test, and Development Commands
 - `python -m venv .venv` then `.\.venv\Scripts\Activate.ps1`: create and activate the local environment (Windows).
 - `pip install -r requirements.txt`: install runtime and dev dependencies.
