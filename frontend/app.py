@@ -799,76 +799,91 @@ def _run_full_analysis(
             "Run locally with DEMO_FORCE_ON=false to use file uploads."
         )
 
-    progress_bar = st.progress(0)
-    status = st.empty()
+    with st.status("Starting live analysis", expanded=True) as analysis_status:
+        progress_bar = st.progress(0)
 
-    # Step 1: policy
-    status.write("Step 1/4 – Analyzing policy PDF…")
-    progress_bar.progress(20)
+        # Step 1: policy
+        step_label = "Step 1/4: Analyzing policy"
+        analysis_status.update(label=step_label, state="running", expanded=True)
+        st.write(step_label)
+        progress_bar.progress(20)
 
-    policy_result = run_policy_analysis(
-        policy_file.getvalue(),
-        policy_file.name,
-    )
+        policy_result = run_policy_analysis(
+            policy_file.getvalue(),
+            policy_file.name,
+        )
 
-    # Step 1b: Extract raw sections for citation linking (in-memory only)
-    uploaded_pdf_path = Path(policy_result.get("artifacts", {}).get("uploaded_pdf", ""))
-    if uploaded_pdf_path.is_file():
-        policy_text = load_pdf_text(uploaded_pdf_path)
-        raw_sections = split_into_sections(policy_text)
-        section_map = build_section_text_map(raw_sections)
-        st.session_state[SESSION_KEY_SECTION_MAP] = section_map
+        # Step 1b: Extract raw sections for citation linking (in-memory only)
+        uploaded_pdf_path = Path(policy_result.get("artifacts", {}).get("uploaded_pdf", ""))
+        if uploaded_pdf_path.is_file():
+            policy_text = load_pdf_text(uploaded_pdf_path)
+            raw_sections = split_into_sections(policy_text)
+            section_map = build_section_text_map(raw_sections)
+            st.session_state[SESSION_KEY_SECTION_MAP] = section_map
 
-    # Step 2: denial text
-    status.write("Step 2/4 – Saving and reading denial letter PDF…")
-    progress_bar.progress(45)
+        # Step 2: denial text
+        step_label = "Step 2/4: Reading denial letter"
+        analysis_status.update(label=step_label, state="running", expanded=True)
+        st.write(step_label)
+        progress_bar.progress(45)
 
-    denial_path = _save_denial_pdf(denial_file, claim_nickname or None)
-    denial_text = load_pdf_text(denial_path)
+        denial_path = _save_denial_pdf(denial_file, claim_nickname or None)
+        denial_text = load_pdf_text(denial_path)
 
-    # Step 3: A–G dispute report
-    status.write(
-        "Step 3/4 – Building A–G dispute report from policy + denial…")
-    progress_bar.progress(75)
+        # Step 3: A-G dispute report
+        step_label = "Step 3/4: Building dispute analysis"
+        analysis_status.update(label=step_label, state="running", expanded=True)
+        st.write(step_label)
+        progress_bar.progress(75)
 
-    summary_json_path = Path(policy_result.get(
-        "artifacts", {}).get("summary_json", ""))
-    if not summary_json_path.is_file():
-        raise RuntimeError(
-            f"Policy summary JSON not found at {summary_json_path!s}")
+        summary_json_path = Path(policy_result.get(
+            "artifacts", {}).get("summary_json", ""))
+        if not summary_json_path.is_file():
+            raise RuntimeError(
+                f"Policy summary JSON not found at {summary_json_path!s}")
 
-    policy_summary_payload = json.loads(
-        summary_json_path.read_text(encoding="utf-8"))
+        policy_summary_payload = json.loads(
+            summary_json_path.read_text(encoding="utf-8"))
 
-    dispute_obj: DisputeReport = build_denial_aware_report(
-        policy_summary_payload,
-        denial_text,
-    )
+        dispute_obj: DisputeReport = build_denial_aware_report(
+            policy_summary_payload,
+            denial_text,
+        )
 
-    # attach IDs for nicer Markdown & UI labels
-    dispute_obj.policy_id = (
-        policy_result.get("policy_name")
-        or Path(policy_result.get("source_path") or "").stem
-        or "policy"
-    )
-    dispute_obj.denial_id = Path(denial_path).stem or "denial"
+        # Step 4: output preparation
+        step_label = "Step 4/4: Preparing outputs"
+        analysis_status.update(label=step_label, state="running", expanded=True)
+        st.write(step_label)
+        progress_bar.progress(90)
 
-    markdown = render_dispute_markdown(dispute_obj)
-    dispute_report_dict = dispute_obj.to_dict()
+        # attach IDs for nicer Markdown & UI labels
+        dispute_obj.policy_id = (
+            policy_result.get("policy_name")
+            or Path(policy_result.get("source_path") or "").stem
+            or "policy"
+        )
+        dispute_obj.denial_id = Path(denial_path).stem or "denial"
 
-    progress_bar.progress(100)
-    status.write("Step 4/4 – Done.")
+        markdown = render_dispute_markdown(dispute_obj)
+        dispute_report_dict = dispute_obj.to_dict()
 
-    dispute_result: Dict[str, Any] = {
-        "policy_id": dispute_obj.policy_id,
-        "denial_id": dispute_obj.denial_id,
-        "dispute_report": dispute_report_dict,
-        "markdown": markdown,
-        "artifacts": {
-            "summary_json": str(summary_json_path),
-            "denial_pdf": str(denial_path),
-        },
-    }
+        dispute_result: Dict[str, Any] = {
+            "policy_id": dispute_obj.policy_id,
+            "denial_id": dispute_obj.denial_id,
+            "dispute_report": dispute_report_dict,
+            "markdown": markdown,
+            "artifacts": {
+                "summary_json": str(summary_json_path),
+                "denial_pdf": str(denial_path),
+            },
+        }
+
+        progress_bar.progress(100)
+        analysis_status.update(
+            label="Analysis complete",
+            state="complete",
+            expanded=False,
+        )
 
     return policy_result, dispute_result
 
