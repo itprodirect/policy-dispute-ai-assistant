@@ -1,5 +1,7 @@
 # Policy Dispute AI Assistant
 
+[![CI](https://github.com/itprodirect/policy-dispute-ai-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/itprodirect/policy-dispute-ai-assistant/actions/workflows/ci.yml)
+
 AI assistant for turning homeowners policies and denial letters into dispute‑focused summaries (A–G structure) for public adjusters and attorneys.
 
 > **Status:** Internal prototype / demo, with Phase 1 demo-hardening complete
