@@ -55,6 +55,16 @@ def _get_bool_env(name: str, default: bool) -> bool:
     )
 
 
+def is_demo_force_on() -> bool:
+    """
+    Return whether hosted demo safety mode is enabled.
+
+    This intentionally avoids get_settings() so public demo deployments can boot
+    without OPENAI_API_KEY when live analysis is disabled.
+    """
+    return _get_bool_env("DEMO_FORCE_ON", False)
+
+
 @dataclass(frozen=True)
 class Settings:
     openai_api_key: str
