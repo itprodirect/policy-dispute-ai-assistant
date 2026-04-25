@@ -70,5 +70,4 @@ Thumbs.db
 # -------------------------
 data/uploads/
 data/claims.db
-frontend/data/
 wandb/
