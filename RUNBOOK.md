@@ -29,8 +29,8 @@ Goal: Run the full demo with **zero API calls**.
 
 Deterministic demo files live here:
 
-- `data/processed/demo/demo.json`
-- `data/processed/demo/demo.report.md`
+- `assets/demo/demo.json`
+- `assets/demo/demo.report.md`
 
 ### Steps
 
@@ -41,14 +41,12 @@ Deterministic demo files live here:
 
 ### If demo assets are missing
 
-Use one of the sample pairs in `data/processed/` and copy them into:
+The demo assets are tracked in the repository. Restore these files from git:
 
-- `data/processed/demo/demo.json`
-- `data/processed/demo/demo.report.md`
+- `assets/demo/demo.json`
+- `assets/demo/demo.report.md`
 
-Primary recommended source:
-
-- `HO3_ISO_1999_III_SAMPLE__1768603155` + `.report`
+Do not rebuild this bundle from real client claim data.
 
 ---
 
@@ -69,8 +67,8 @@ Primary recommended source:
 ### Streamlit boots but errors when demo mode is on
 
 - Confirm both files exist:
-  - `data/processed/demo/demo.json`
-  - `data/processed/demo/demo.report.md`
+  - `assets/demo/demo.json`
+  - `assets/demo/demo.report.md`
 
 ### Live mode fails due to missing key
 

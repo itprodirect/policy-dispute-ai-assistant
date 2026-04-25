@@ -60,6 +60,9 @@ The repo’s GitHub PR and issues contain screenshots of:
 
 ```text
 policy-dispute-ai-assistant/
+├─ assets/
+│  └─ demo/                 # Tracked offline demo dispute bundle
+│
 ├─ src/
 │  ├─ config.py              # Env + safety flags (SAFE_MODE, PERSIST_RAW_TEXT, etc.)
 │  ├─ llm_client.py          # Thin wrapper around OpenAI Responses API
@@ -77,7 +80,7 @@ policy-dispute-ai-assistant/
 │  └─ app_v0_minimul.py      # Original single-page prototype (kept for reference)
 │
 ├─ data/
-│  ├─ processed/             # Sample JSON + Markdown outputs (checked in)
+│  ├─ processed/             # Local generated JSON + Markdown outputs (gitignored)
 │  └─ uploads/               # Local upload cache (gitignored)
 │
 ├─ notebooks/                # Experimental notebooks / scratchpads
@@ -149,6 +152,16 @@ streamlit run frontend/app.py
 ```
 
 This will start Streamlit on `http://localhost:8501`.
+
+### Demo Mode (offline)
+
+For a fresh-clone walkthrough with zero API calls, toggle **Demo Mode (offline)** in the sidebar.
+The bundled demo-safe dispute report lives in:
+
+- `assets/demo/demo.json`
+- `assets/demo/demo.report.md`
+
+These tracked files are deterministic demo artifacts, not real client claim data.
 
 ### New claim flow
 
