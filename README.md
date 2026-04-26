@@ -173,6 +173,10 @@ OPENAI_API_KEY="sk-..."
 # Optional – override default model (defaults to gpt-4.1-mini)
 OPENAI_MODEL="gpt-4.1-mini"
 
+# Optional - per-stage overrides:
+# OPENAI_MODEL_SECTION_SUMMARY="gpt-4.1-mini"
+# OPENAI_MODEL_DISPUTE_REPORT="gpt-4.1-mini"
+
 # Data-handling flags
 SAFE_MODE=true          # when true, raw text is not persisted to disk
 PERSIST_RAW_TEXT=false  # only set true if you explicitly want raw text saved
