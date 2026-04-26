@@ -203,3 +203,29 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Start #50 only: latency reduction in the section summary pipeline, without prompt rewrites, report schema changes, PDF processing changes, benchmark changes, model swaps, or unrelated refactors.
+
+### 2026-04-25 23:59 ET - Post-#62 hygiene truth sync
+
+#### Goal
+- Confirm #50 / PR #62 post-merge state and align durable docs with #51 as the next intended issue.
+
+#### Completed
+- Confirmed PR #62 is merged and issue #50 is closed.
+- Confirmed #51 is open and next in the Phase 2 order.
+- Updated durable docs to mark #50 complete and #51 next.
+- Recorded that section-summary calls now use bounded concurrency via `ThreadPoolExecutor`.
+- Recorded that `SECTION_SUMMARY_MAX_WORKERS` defaults to 4 and `SECTION_SUMMARY_MAX_WORKERS=1` forces sequential behavior.
+
+#### Decisions
+- No new technical decisions.
+
+#### Validation
+- Git/GitHub hygiene checks completed.
+- Docs-only diff reviewed.
+
+#### Deferred
+- #51 redundant PDF reprocessing cleanup remains deferred to the next issue.
+- Prompt rewrites, report schema changes, Structured Outputs changes, model configuration changes, retry changes, telemetry changes, benchmark changes, frontend behavior changes, and deployment/auth/storage/PDF export work remain out of scope.
+
+#### Next session starter
+- Start #51 only: remove redundant PDF reprocessing from the live pipeline, without prompt rewrites, report schema changes, Structured Outputs changes, model configuration changes, retry changes, telemetry changes, benchmark changes, frontend behavior changes, or unrelated refactors.

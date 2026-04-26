@@ -32,13 +32,13 @@ Intentionally deferred:
 - #18 Streamlit Community Cloud deployment prep - revisit only when a hosted public demo is needed.
 - #20 walkthrough video/screenshot recipe - revisit after Phase 2 stabilizes.
 
-## Phase 2: Model and speed refactor - Stage model config complete
+## Phase 2: Model and speed refactor - section summary concurrency complete
 
-True Phase 2 remains reserved for model/speed/API refactor work. Baseline measurement is complete via #46 / PR #54. The Responses API migration is complete via #47 / PR #56. Structured Outputs for final dispute report generation is complete via #48 / PR #58. Stage-specific model configuration is complete via #49 / PR #60. The next intended issue is #50 latency reduction in the section summary pipeline.
+True Phase 2 remains reserved for model/speed/API refactor work. Baseline measurement is complete via #46 / PR #54. The Responses API migration is complete via #47 / PR #56. Structured Outputs for final dispute report generation is complete via #48 / PR #58. Stage-specific model configuration is complete via #49 / PR #60. Section-summary latency reduction is complete via #50 / PR #62. The next intended issue is #51 redundant PDF reprocessing cleanup in the live pipeline.
 
 Gating rule:
 
-#49 added configuration flexibility only through `OPENAI_MODEL_<STAGE_UPPER>` and preserved default model behavior unless per-stage overrides are explicitly set. Handle #50 separately. Do not bundle prompt rewrites, report schema changes, PDF processing changes, benchmark changes, model swaps, or unrelated refactors into the latency-reduction PR.
+#50 added bounded concurrency for section-summary LLM calls only. Section-summary calls now use `ThreadPoolExecutor`; `SECTION_SUMMARY_MAX_WORKERS` defaults to 4, and `SECTION_SUMMARY_MAX_WORKERS=1` forces sequential behavior. PDF reprocessing cleanup remains deferred to #51. Do not bundle prompt rewrites, report schema changes, benchmark changes, model swaps, or unrelated refactors into the PDF reprocessing cleanup PR.
 
 Order:
 
@@ -47,9 +47,10 @@ Order:
 3. Add Structured Outputs for final dispute report generation: complete via #48 / PR #58.
    Section summaries intentionally remain on `json_object` mode.
 4. Add stage-specific model configuration: complete via #49 / PR #60.
-5. Speed work: parallelize per-section LLM calls and remove redundant PDF reprocessing in the live pipeline: next via #50.
-6. Add focused-analysis mode.
-7. Final benchmark report comparing latency, cost, and report quality against the Phase 2 baseline.
+5. Parallelize per-section LLM calls: complete via #50 / PR #62.
+6. Remove redundant PDF reprocessing in the live pipeline: next via #51.
+7. Add focused-analysis mode.
+8. Final benchmark report comparing latency, cost, and report quality against the Phase 2 baseline.
 
 ## Out of scope across all phases
 
