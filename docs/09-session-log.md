@@ -177,3 +177,29 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Start #49 only: stage-specific model configuration, without prompt rewrites, report schema changes, PDF processing changes, benchmark changes, or speed refactors.
+
+### 2026-04-25 23:38 ET - Post-#60 hygiene truth sync
+
+#### Goal
+- Confirm #49 / PR #60 post-merge state and align durable docs with #50 as the next intended issue.
+
+#### Completed
+- Confirmed PR #60 is merged and issue #49 is closed.
+- Confirmed #50 is open and next in the Phase 2 order.
+- Updated durable docs to mark #49 complete and #50 next.
+- Recorded that stage-specific model overrides use `OPENAI_MODEL_<STAGE_UPPER>`.
+- Recorded that default model behavior is unchanged unless a per-stage override is explicitly set.
+
+#### Decisions
+- No new technical decisions.
+
+#### Validation
+- Git/GitHub hygiene checks completed.
+- Docs-only diff reviewed.
+
+#### Deferred
+- #50 latency reduction in the section summary pipeline.
+- Prompt rewrites, report schema changes, PDF processing changes, benchmark changes, model tuning, and unrelated refactors.
+
+#### Next session starter
+- Start #50 only: latency reduction in the section summary pipeline, without prompt rewrites, report schema changes, PDF processing changes, benchmark changes, model swaps, or unrelated refactors.

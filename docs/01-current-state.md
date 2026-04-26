@@ -25,6 +25,7 @@ Phase 1 is complete. The app remains a Streamlit research prototype with determi
 - PR #54: Phase 2 baseline benchmark harness and checked-in no-API baseline report.
 - PR #56: #47 Responses API migration for the single OpenAI wrapper.
 - PR #58: #48 Structured Outputs for final dispute report generation only.
+- PR #60: #49 stage-specific model configuration via `OPENAI_MODEL_<STAGE_UPPER>`.
 
 ## Current Phase
 
@@ -38,9 +39,11 @@ Phase 1C local/demo trust polish is complete with #21 Demo Mode citation/source 
 
 #20 walkthrough video and screenshot recipe is intentionally deferred because walkthrough/video work should wait until after Phase 2 stabilizes.
 
-Phase 2 baseline benchmarking is complete via #46 / PR #54. #47 Responses API migration is complete via PR #56. #48 Structured Outputs is complete via PR #58 for final dispute report generation only.
+Phase 2 baseline benchmarking is complete via #46 / PR #54. #47 Responses API migration is complete via PR #56. #48 Structured Outputs is complete via PR #58 for final dispute report generation only. #49 stage-specific model configuration is complete via PR #60.
 
-Section summaries intentionally remain on the default `json_object` mode. The next intended issue is #49 stage-specific model configuration. No model swaps, prompt changes, dataclass/schema refactors, parser changes, PDF processing changes, benchmark changes, or speed refactors have started.
+Stage-specific model overrides are available through `OPENAI_MODEL_<STAGE_UPPER>`, such as `OPENAI_MODEL_SECTION_SUMMARY` and `OPENAI_MODEL_DISPUTE_REPORT`. Default model behavior is unchanged unless a per-stage override is explicitly set.
+
+Section summaries intentionally remain on the default `json_object` mode. The next intended issue is #50 latency reduction in the section summary pipeline. No model swaps, prompt changes, dataclass/schema refactors, parser changes, PDF processing changes, benchmark changes, or speed refactors beyond #50 have started.
 
 ## Local Cleanup
 

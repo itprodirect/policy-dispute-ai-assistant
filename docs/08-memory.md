@@ -11,8 +11,10 @@ Durable project timeline for future Codex and Claude sessions.
 - Phase 2 baseline benchmarking is complete via #46 / PR #54.
 - Phase 2 Responses API migration is complete via #47 / PR #56.
 - Phase 2 Structured Outputs for final dispute report generation is complete via #48 / PR #58.
+- Phase 2 stage-specific model configuration is complete via #49 / PR #60.
+- Stage-specific model overrides use `OPENAI_MODEL_<STAGE_UPPER>` and default model behavior is unchanged unless a per-stage override is explicitly set.
 - Section summaries intentionally remain on default `json_object` mode.
-- Next: start #49 stage-specific model configuration only. Do not bundle prompt rewrites, report schema changes, PDF processing changes, benchmark changes, or speed refactors in the #49 PR.
+- Next: start #50 latency reduction in the section summary pipeline only. Do not bundle prompt rewrites, report schema changes, PDF processing changes, benchmark changes, model swaps, or unrelated refactors in the #50 PR.
 
 ## Timeline
 
@@ -28,6 +30,7 @@ Durable project timeline for future Codex and Claude sessions.
 | 2026-04-25 22:25 ET | Phase 2 baseline benchmark harness merged | #46 / PR #54 | Created the before-state benchmark before any model/API/speed refactor work. |
 | 2026-04-25 22:57 ET | Responses API migration merged | #47 / PR #56 | Replaced the wrapper API surface while preserving prompts, schemas, model choices, retry behavior, telemetry names, PDF processing, benchmark harness, and pipeline behavior. |
 | 2026-04-25 23:19 ET | Structured Outputs for dispute reports merged | #48 / PR #58 | Added strict JSON Schema mode only to final dispute report generation; section summaries remain on `json_object` mode. |
+| 2026-04-25 23:37 ET | Stage-specific model configuration merged | #49 / PR #60 | Added optional `OPENAI_MODEL_<STAGE_UPPER>` overrides while preserving default model behavior unless explicitly configured. |
 
 ## Standing Guardrails
 
