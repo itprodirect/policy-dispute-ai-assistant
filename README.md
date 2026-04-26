@@ -263,6 +263,33 @@ Under the A–G tab there is an optional **“Full policy breakdown”** section
 
 You can also run the underlying pipelines from the command line without Streamlit.
 
+### Phase 2 baseline benchmark
+
+Before starting Phase 2 model/API/speed work, run the deterministic no-API baseline:
+
+```bash
+python scripts/benchmark_phase2_baseline.py --mode demo
+```
+
+This measures loading the checked-in demo bundle, rendering the existing dispute Markdown path, and resolving demo citations. It does not measure PDF extraction, OpenAI latency, token usage, cost, or live report generation.
+
+To write metrics JSON for inspection:
+
+```bash
+python scripts/benchmark_phase2_baseline.py --mode demo --output .tmp/phase2-baseline-demo.json
+```
+
+For a live current-pipeline benchmark, provide non-sensitive local inputs and `OPENAI_API_KEY`:
+
+```bash
+python scripts/benchmark_phase2_baseline.py --mode live \
+  --policy-pdf data/raw_policies/HO3_TRUE_FL_2021.pdf \
+  --denial-text data/raw_denials/HO3_TRUE_FL_2021_denial.txt \
+  --output .tmp/phase2-baseline-live.json
+```
+
+See `benchmarks/phase2-baseline.md` for the checked-in before-state report and limitations.
+
 ### Summarize a policy PDF
 
 ```bash

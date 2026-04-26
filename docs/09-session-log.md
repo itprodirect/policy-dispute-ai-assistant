@@ -74,3 +74,31 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Start Phase 2 baseline benchmarking and current-state measurement against the demo bundle.
+
+### 2026-04-25 22:19 ET - Phase 2 baseline benchmark harness
+
+#### Goal
+- Start issue #46 only by adding a repeatable before-state benchmark before model/API/speed work.
+
+#### Completed
+- Added `scripts/benchmark_phase2_baseline.py`.
+- Added `benchmarks/phase2-baseline.md`.
+- Documented rerun commands in README and RUNBOOK.
+- Updated heartbeat and memory for the baseline-only Phase 2 step.
+
+#### Decisions
+- Use deterministic demo-bundle mode as the checked-in baseline because it makes no API calls and uses tracked demo-safe inputs.
+- Keep live current-pipeline benchmarking optional because it requires `OPENAI_API_KEY` and non-sensitive local inputs.
+
+#### Validation
+- `python scripts/benchmark_phase2_baseline.py --mode demo`
+- `python scripts/benchmark_phase2_baseline.py --mode demo --output .tmp/phase2-baseline-demo.json`
+- `python -m pytest -q` - 27 passed.
+
+#### Deferred
+- Live OpenAI/API benchmark run.
+- #47 Responses API migration.
+- Structured Outputs, model swaps, prompt/schema changes, and speed refactors.
+
+#### Next session starter
+- Review and merge the #46 PR, then use the baseline before starting #47 or any other Phase 2 implementation work.
