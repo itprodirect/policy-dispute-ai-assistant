@@ -17,32 +17,38 @@ Completed:
 - #22 Clean up stale `frontend/data/` artifacts.
 
 Note:
-#20 walkthrough video and screenshot recipe remains open, but it is intentionally deferred to a future brand/content walkthrough session. Do not mix it into technical hardening sessions.
+#20 walkthrough video and screenshot recipe is intentionally deferred until after Phase 2 stabilizes. Do not mix it into technical hardening sessions.
 
-## Phase 1C: Hosted demo and trust polish - next
+## Phase 1C: Local/demo trust polish - completed
 
-Work one issue per PR, in this order:
+Completed:
 
-1. #18 Streamlit Community Cloud deployment prep.
-2. #21 Citation/source accordions in Demo Mode.
-3. #23 Human-readable context in dispute report exports.
+- #21 Demo Mode citation/source accordions via PR #41.
+- Demo source-map loading hardening via PR #42.
+- #23 human-readable export context and human/AI export grouping via PR #43.
 
-Note:
-Deployment prep may come before citation accordions, but the hosted demo should not be publicly promoted as a final portfolio demo until the Demo Mode citation/source accordion work is complete.
+Intentionally deferred:
+
+- #18 Streamlit Community Cloud deployment prep - revisit only when a hosted public demo is needed.
+- #20 walkthrough video/screenshot recipe - revisit after Phase 2 stabilizes.
 
 ## Phase 2: Model and speed refactor - not started
 
-True Phase 2 remains reserved for model/speed/API refactor work. Begin only after Phase 1A, 1B, and 1C are complete or intentionally deferred, and only after focused inspection or measurement.
+True Phase 2 remains reserved for model/speed/API refactor work. Begin only after Phase 1A, 1B, and 1C are complete or intentionally deferred, and only after baseline measurement.
 
-Scope:
+Gating rule:
 
-- Replace the Chat Completions wrapper with the Responses API.
-- Add Structured Outputs schemas for sectioning and dispute report generation.
-- Add stage-specific model configuration.
-- Parallelize or reduce per-section LLM calls.
-- Add a focused-analysis mode that targets the most material sections.
-- Remove redundant PDF reprocessing in the live pipeline.
-- Add a benchmark report comparing latency, cost, and report quality before and after.
+Do not start Responses API or Structured Outputs work before baseline measurements exist.
+
+Order:
+
+1. Baseline benchmarking and current-state measurement: end-to-end latency, cost per claim, per-section token usage, and quality snapshot against the demo bundle.
+2. Replace the Chat Completions wrapper with the Responses API.
+3. Add Structured Outputs schemas for sectioning and dispute report generation.
+4. Add stage-specific model configuration.
+5. Speed work: parallelize per-section LLM calls and remove redundant PDF reprocessing in the live pipeline.
+6. Add focused-analysis mode.
+7. Final benchmark report comparing latency, cost, and report quality against the Phase 2 baseline.
 
 ## Out of scope across all phases
 

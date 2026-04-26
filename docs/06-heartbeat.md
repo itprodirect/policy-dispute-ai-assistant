@@ -4,19 +4,19 @@ Date: 2026-04-25
 
 ## Status
 
-- Phase 1A demo polish is complete.
-- Phase 1B technical closeout is complete with #19 GitHub Actions CI for pytest and #22 stale `frontend/data/` artifact cleanup.
-- #20 walkthrough video and screenshot recipe remains open but is intentionally deferred to a future brand/content walkthrough session.
-- Phase 1C hosted demo and trust polish has not started.
-- Phase 2 model/speed refactor has not started.
-- The next technical issue is #18: Streamlit Community Cloud deployment prep.
+- Phase 1A demo polish: complete.
+- Phase 1B technical closeout: complete.
+- Phase 1C local/demo trust polish: complete via PR #41, PR #42, and PR #43.
+- #18 deployment prep: intentionally deferred.
+- #20 walkthrough/video recipe: intentionally deferred until after Phase 2 stabilizes.
+- Phase 2 model/speed refactor: not started.
+- Next step: baseline benchmarking.
 
 ## Current Watchouts
 
-- Keep phase boundaries clear. Phase 1C may begin with #18 Streamlit Community Cloud deployment prep.
-- Do not start #20 during technical hardening; defer it to a future brand/content walkthrough session.
-- Do not mix Phase 2 model/API refactor work into Phase 1B or Phase 1C PRs.
-- Do not start model/API modernization before Phase 1B/1C completion or intentional deferral, inspection, and measurement.
+- Keep phase boundaries clear. #18 and #20 are intentionally deferred, not missing from the roadmap.
+- Do not start Responses API, Structured Outputs, model swaps, or speed refactors before baseline benchmarking exists.
+- Do not mix Phase 2 implementation work into docs-only wrap PRs.
 - Do not change prompts or report schemas as part of docs, CI, or deployment work.
 - Keep public-demo safety centered on deterministic Demo Mode and `DEMO_FORCE_ON`.
 - Do not commit local runtime artifacts, real claim data, secrets, or screenshot candidates.

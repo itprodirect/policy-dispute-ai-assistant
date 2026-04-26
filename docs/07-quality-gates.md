@@ -26,6 +26,8 @@
 - Validate API-backed work with non-sensitive sample files only.
 - Always compare generated reports against the source policy and denial; output is AI-generated.
 
-## Future CI
+## CI
 
-#19 should add GitHub Actions CI for `python -m pytest -q`. Until then, local pytest output is the primary automated validation signal.
+- GitHub Actions runs `python -m pytest -q` on every push and PR via `.github/workflows/ci.yml`.
+- README CI badge reflects the latest run.
+- Local pytest remains the fastest signal; CI is the merge gate.

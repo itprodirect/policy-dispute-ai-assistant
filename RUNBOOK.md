@@ -81,9 +81,10 @@ The canonical local artifact location is the repository-root `data/` directory:
 
 ### Streamlit boots but errors when demo mode is on
 
-- Confirm both files exist:
+- Confirm all three demo files exist:
   - `assets/demo/demo.json`
   - `assets/demo/demo.report.md`
+  - `assets/demo/section_text.json`
 
 ### Live mode fails due to missing key
 

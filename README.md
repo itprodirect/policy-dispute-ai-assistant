@@ -4,7 +4,7 @@
 
 AI assistant for turning homeowners policies and denial letters into dispute‑focused summaries (A–G structure) for public adjusters and attorneys.
 
-> **Status:** Internal prototype / demo, with Phase 1 demo-hardening complete
+> **Status:** Internal prototype / demo, with Phase 1 complete (1A demo polish, 1B technical closeout, 1C local/demo trust polish)
 >
 > **Frontend:** Streamlit v1 UX (`frontend/app.py`)
 >
@@ -299,7 +299,12 @@ This repo is meant for **local experiments**, not production.
 
 ## Roadmap / ideas
 
-Phase 1A demo polish and Phase 1B technical closeout are complete. #20 walkthrough video and screenshot recipe remains open, but is intentionally deferred to a future brand/content walkthrough session. Phase 1C may begin with #18 Streamlit Community Cloud deployment prep. True Phase 2 remains reserved for model/speed/API refactor work. Full sequencing lives in `docs/03-roadmap.md`.
+Phase 1 is complete. Phase 1A demo polish, Phase 1B technical closeout, and Phase 1C local/demo trust polish are done.
+
+- #18 Streamlit Community Cloud deployment prep is intentionally deferred until a hosted public demo is needed.
+- #20 walkthrough video/screenshot recipe is intentionally deferred until after Phase 2 model/API/speed upgrades stabilize.
+- Phase 2 starts with baseline benchmarking before Responses API, Structured Outputs, or model-config work.
+- Full sequencing lives in `docs/03-roadmap.md`.
 
 If you experiment with the repo and find issues or ideas, feel free to open GitHub Issues or PRs.
 
