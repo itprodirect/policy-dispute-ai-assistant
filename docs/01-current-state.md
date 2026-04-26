@@ -2,7 +2,7 @@
 
 Last updated: 2026-04-25
 
-Phase 1A demo polish is complete. The app remains a Streamlit research prototype with deterministic Demo Mode, a live API-backed local workflow, README screenshots, and explicit AI-generated / not-legal-advice framing.
+Phase 1 is complete. The app remains a Streamlit research prototype with deterministic Demo Mode, a live API-backed local workflow, README screenshots, and explicit AI-generated / not-legal-advice framing.
 
 ## Completed Phase 1A Issues
 
@@ -19,16 +19,23 @@ Phase 1A demo polish is complete. The app remains a Streamlit research prototype
 - PR #35: README screenshot polish with five committed demo-safe screenshots.
 - PR #38: GitHub Actions CI for pytest.
 - PR #39: stale `frontend/data/` artifact cleanup and runtime artifact docs.
+- PR #41: Demo Mode citation/source accordions.
+- PR #42: Demo source-map loading hardening.
+- PR #43: human-readable export context and human/AI export grouping.
 
 ## Current Phase
 
+Phase 1A demo polish is complete.
+
 Phase 1B technical closeout is complete with #19 GitHub Actions CI for pytest and #22 stale `frontend/data/` artifact cleanup.
 
-#20 walkthrough video and screenshot recipe remains open, but it is intentionally deferred to a future brand/content walkthrough session.
+Phase 1C local/demo trust polish is complete with #21 Demo Mode citation/source accordions, Demo source-map loading hardening, and #23 export context polish.
 
-Phase 1C technical work may begin with #18 Streamlit Community Cloud deployment prep. Phase 1C also includes #21 Demo Mode citation/source accordions and #23 export context polish.
+#18 Streamlit Community Cloud deployment prep is intentionally deferred because hosted deployment is not needed yet and adds surface area.
 
-True Phase 2 remains reserved for model/speed/API refactor work. No deployment config, citation accordion update, export polish, model/API modernization, prompt changes, schema changes, backend rebuild, auth, users, billing, or storage changes have been started.
+#20 walkthrough video and screenshot recipe is intentionally deferred because walkthrough/video work should wait until after Phase 2 stabilizes.
+
+Next step is Phase 2 baseline benchmarking. No Phase 2 implementation has started.
 
 ## Local Cleanup
 

@@ -21,3 +21,10 @@ Phase 1B should begin with #19 GitHub Actions CI for pytest before stale artifac
 ### Defer model/API modernization to Phase 2
 
 Responses API migration, Structured Outputs, stage-specific model configuration, and speed/pipeline work are true Phase 2 model/speed refactor items. They are deferred until after Phase 1B and Phase 1C are complete or intentionally deferred, and only after focused inspection or measurement.
+
+## 2026-04-25 - Phase 1C wrap
+
+- Mark Phase 1 complete after Phase 1C technical closeout.
+- Defer #18 Streamlit Community Cloud deployment prep.
+- Defer #20 walkthrough video and screenshot recipe.
+- Require Phase 2 to start with baseline benchmarking.
