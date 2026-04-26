@@ -151,3 +151,29 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Start #48 only: Structured Outputs, without model swaps, prompt rewrites, report schema changes, PDF processing changes, benchmark changes, or speed refactors.
+
+### 2026-04-25 23:19 ET - Post-#58 hygiene truth sync
+
+#### Goal
+- Confirm #48 / PR #58 post-merge state and align durable docs with #49 as the next intended issue.
+
+#### Completed
+- Confirmed PR #58 is merged and issue #48 is closed.
+- Confirmed #49 is open and next in the Phase 2 order.
+- Updated durable docs to mark #48 complete and #49 next.
+- Recorded that Structured Outputs were applied only to final dispute report generation.
+- Recorded that section summaries intentionally remain on default `json_object` mode.
+
+#### Decisions
+- No new technical decisions.
+
+#### Validation
+- Git/GitHub hygiene checks completed.
+- Docs-only diff reviewed.
+
+#### Deferred
+- #49 stage-specific model configuration.
+- Prompt cleanup, section-summary Structured Outputs, benchmark comparison, PDF processing changes, and speed refactors.
+
+#### Next session starter
+- Start #49 only: stage-specific model configuration, without prompt rewrites, report schema changes, PDF processing changes, benchmark changes, or speed refactors.

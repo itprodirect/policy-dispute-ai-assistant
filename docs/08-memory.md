@@ -10,7 +10,9 @@ Durable project timeline for future Codex and Claude sessions.
 - #18 Streamlit Community Cloud deployment prep and #20 walkthrough video/screenshot recipe are intentionally deferred.
 - Phase 2 baseline benchmarking is complete via #46 / PR #54.
 - Phase 2 Responses API migration is complete via #47 / PR #56.
-- Next: start #48 Structured Outputs only. Do not bundle model swaps, prompt rewrites, report schema changes, PDF processing changes, or speed refactors in the #48 PR.
+- Phase 2 Structured Outputs for final dispute report generation is complete via #48 / PR #58.
+- Section summaries intentionally remain on default `json_object` mode.
+- Next: start #49 stage-specific model configuration only. Do not bundle prompt rewrites, report schema changes, PDF processing changes, benchmark changes, or speed refactors in the #49 PR.
 
 ## Timeline
 
@@ -25,6 +27,7 @@ Durable project timeline for future Codex and Claude sessions.
 | 2026-04-25 21:42 ET | Phase 1 wrapped and Phase 2 handoff recorded | PR #44 | Marked Phase 1 complete, deferred #18/#20, and required Phase 2 to start with baseline benchmarking. |
 | 2026-04-25 22:25 ET | Phase 2 baseline benchmark harness merged | #46 / PR #54 | Created the before-state benchmark before any model/API/speed refactor work. |
 | 2026-04-25 22:57 ET | Responses API migration merged | #47 / PR #56 | Replaced the wrapper API surface while preserving prompts, schemas, model choices, retry behavior, telemetry names, PDF processing, benchmark harness, and pipeline behavior. |
+| 2026-04-25 23:19 ET | Structured Outputs for dispute reports merged | #48 / PR #58 | Added strict JSON Schema mode only to final dispute report generation; section summaries remain on `json_object` mode. |
 
 ## Standing Guardrails
 
