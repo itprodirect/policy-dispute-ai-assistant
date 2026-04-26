@@ -5,7 +5,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .run_baseline_policy_summary import summarize_policy
+from .citation_linking import build_section_text_map
+from .run_baseline_policy_summary import summarize_policy_with_sections
 from .report_builder import (
     build_policy_report,
     render_markdown,
@@ -89,7 +90,8 @@ def run_policy_analysis(
 
     try:
         # This runs your existing end-to-end pipeline (PDF -> sections -> LLM summaries -> JSON).
-        summary_json_path = summarize_policy(pdf_path)
+        summary_json_path, raw_sections = summarize_policy_with_sections(pdf_path)
+        section_text_map = build_section_text_map(raw_sections)
 
         # Normalise into PolicyReport
         summary_data = json.loads(summary_json_path.read_text(encoding="utf-8"))
@@ -104,23 +106,24 @@ def run_policy_analysis(
         md_path.write_text(markdown_text, encoding="utf-8")
 
         return {
-        "policy_name": policy_report.policy_name,
-        "source_path": policy_report.source_path,
-        "stats": {
-            "num_sections": policy_report.num_sections,
-            "num_unknown_sections": policy_report.num_unknown_sections,
-            "num_meta_sections": policy_report.num_meta_sections,
-        },
-        "sections_substantive": sections_substantive,
-        "sections_meta": sections_meta,
-        "artifacts": {
-            "summary_json": str(summary_json_path),
-            "markdown_report": str(md_path),
-            "uploaded_pdf": str(pdf_path),
-            "safe_mode": settings.safe_mode,
-            "persist_raw_text": settings.persist_raw_text,
-        },
-        "markdown": markdown_text,
+            "policy_name": policy_report.policy_name,
+            "source_path": policy_report.source_path,
+            "stats": {
+                "num_sections": policy_report.num_sections,
+                "num_unknown_sections": policy_report.num_unknown_sections,
+                "num_meta_sections": policy_report.num_meta_sections,
+            },
+            "sections_substantive": sections_substantive,
+            "sections_meta": sections_meta,
+            "section_text_map": section_text_map,
+            "artifacts": {
+                "summary_json": str(summary_json_path),
+                "markdown_report": str(md_path),
+                "uploaded_pdf": str(pdf_path),
+                "safe_mode": settings.safe_mode,
+                "persist_raw_text": settings.persist_raw_text,
+            },
+            "markdown": markdown_text,
         }
     finally:
         # Always finish W&B run and log rollups

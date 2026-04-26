@@ -130,13 +130,14 @@ def _resolve_output_dir() -> Path:
     return SAFE_DATA_PROCESSED_DIR if settings.safe_mode else DATA_PROCESSED_DIR
 
 
-def summarize_policy(pdf_path: Path) -> Path:
+def summarize_policy_with_sections(pdf_path: Path) -> tuple[Path, Dict[str, str]]:
     """
     End-to-end pipeline for a single policy PDF:
     - load text
     - split into sections (dict: section_name -> section_text)
     - summarize each section via LLM
     - write JSON to <output_dir>/<stem>.json
+    - return the JSON path and raw in-memory sections
     """
     print(f"\n[bold]Loading policy:[/bold] {pdf_path}")
     text = load_pdf_text(pdf_path)
@@ -188,6 +189,14 @@ def summarize_policy(pdf_path: Path) -> Path:
     )
     print(f"Saved summary to: [green]{out_path}[/green]")
 
+    return out_path, sections
+
+
+def summarize_policy(pdf_path: Path) -> Path:
+    """
+    End-to-end pipeline for a single policy PDF, returning only the JSON path.
+    """
+    out_path, _sections = summarize_policy_with_sections(pdf_path)
     return out_path
 
 
