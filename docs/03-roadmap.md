@@ -32,18 +32,18 @@ Intentionally deferred:
 - #18 Streamlit Community Cloud deployment prep - revisit only when a hosted public demo is needed.
 - #20 walkthrough video/screenshot recipe - revisit after Phase 2 stabilizes.
 
-## Phase 2: Model and speed refactor - not started
+## Phase 2: Model and speed refactor - baseline complete
 
-True Phase 2 remains reserved for model/speed/API refactor work. Begin only after Phase 1A, 1B, and 1C are complete or intentionally deferred, and only after baseline measurement.
+True Phase 2 remains reserved for model/speed/API refactor work. Baseline measurement is complete via #46 / PR #54. The next intended issue is #47 Responses API migration.
 
 Gating rule:
 
-Do not start Responses API or Structured Outputs work before baseline measurements exist.
+Do not start Structured Outputs, model swaps, prompt/schema changes, PDF processing changes, or speed refactors before #47 is handled separately.
 
 Order:
 
-1. Baseline benchmarking and current-state measurement: end-to-end latency, cost per claim, per-section token usage, and quality snapshot against the demo bundle.
-2. Replace the Chat Completions wrapper with the Responses API.
+1. Baseline benchmarking and current-state measurement: complete via #46 / PR #54.
+2. Replace the Chat Completions wrapper with the Responses API: next via #47.
 3. Add Structured Outputs schemas for sectioning and dispute report generation.
 4. Add stage-specific model configuration.
 5. Speed work: parallelize per-section LLM calls and remove redundant PDF reprocessing in the live pipeline.

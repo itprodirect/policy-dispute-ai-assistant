@@ -8,9 +8,9 @@ Durable project timeline for future Codex and Claude sessions.
 - Current branch baseline: `main`.
 - Phase 1 is complete.
 - #18 Streamlit Community Cloud deployment prep and #20 walkthrough video/screenshot recipe are intentionally deferred.
-- Phase 2 baseline benchmarking has started with issue #46.
+- Phase 2 baseline benchmarking is complete via #46 / PR #54.
 - Phase 2 model/API/speed implementation has not started.
-- Next: review and merge the #46 baseline benchmark harness. Do not start Responses API, Structured Outputs, model swaps, prompt changes, schema changes, or speed refactors before the baseline exists.
+- Next: start #47 Responses API migration only. Do not start Structured Outputs, model swaps, prompt changes, schema changes, PDF processing changes, or speed refactors in the #47 PR.
 
 ## Timeline
 
@@ -23,7 +23,7 @@ Durable project timeline for future Codex and Claude sessions.
 | 2026-04-25 20:45 ET | Demo source-map loading hardened | PR #42 | Reduced fragility in deterministic demo source lookup. |
 | 2026-04-25 21:07 ET | Export context polish completed | #23 / PR #43 | Added human-readable export context and human/AI grouping. |
 | 2026-04-25 21:42 ET | Phase 1 wrapped and Phase 2 handoff recorded | PR #44 | Marked Phase 1 complete, deferred #18/#20, and required Phase 2 to start with baseline benchmarking. |
-| 2026-04-25 22:19 ET | Phase 2 baseline benchmark harness added | #46 | Created the before-state benchmark before any model/API/speed refactor work. |
+| 2026-04-25 22:25 ET | Phase 2 baseline benchmark harness merged | #46 / PR #54 | Created the before-state benchmark before any model/API/speed refactor work. |
 
 ## Standing Guardrails
 
