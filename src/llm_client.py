@@ -59,7 +59,7 @@ def call_llm_json(
     """
     Call the LLM expecting a JSON object.
 
-    - Uses OpenAI chat.completions API.
+    - Uses OpenAI Responses API.
     - Retries on transient errors and JSON decode failures.
     - Raises LLMCallError with the last raw response text on final failure.
     - Logs metrics to wandb if a run is active (via wandb_telemetry.start_wandb_run).
@@ -73,25 +73,24 @@ def call_llm_json(
             settings = get_settings()
             client = OpenAI(api_key=settings.openai_api_key, timeout=timeout)
 
-            response = client.chat.completions.create(
+            response = client.responses.create(
                 model=model_name,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                response_format={"type": "json_object"},
+                instructions=system_prompt,
+                input=user_prompt,
+                text={"format": {"type": "json_object"}},
                 temperature=temperature,
+                store=False,
             )
 
             latency_ms = (time.time() - start_time) * 1000
-            raw = response.choices[0].message.content
+            raw = response.output_text
             last_raw = raw
             parsed = json.loads(raw)
 
             # Log successful call
             total_tokens = response.usage.total_tokens
-            prompt_tokens = response.usage.prompt_tokens
-            completion_tokens = response.usage.completion_tokens
+            prompt_tokens = response.usage.input_tokens
+            completion_tokens = response.usage.output_tokens
             _log_to_wandb({
                 "llm/model": model_name,
                 "llm/stage": stage or "unknown",
