@@ -91,6 +91,92 @@ Rules:
 """
 
 
+DISPUTE_REPORT_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "plain_summary": {"type": "string"},
+        "coverage_highlights": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string"},
+                    "citation": {"type": ["string", "null"]},
+                },
+                "required": ["text", "citation"],
+                "additionalProperties": False,
+            },
+        },
+        "exclusions_limitations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string"},
+                    "citation": {"type": ["string", "null"]},
+                },
+                "required": ["text", "citation"],
+                "additionalProperties": False,
+            },
+        },
+        "denial_reasons": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string"},
+                    "citation": {"type": ["string", "null"]},
+                },
+                "required": ["text", "citation"],
+                "additionalProperties": False,
+            },
+        },
+        "dispute_angles": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "text": {"type": "string"},
+                    "citations": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                },
+                "required": ["text", "citations"],
+                "additionalProperties": False,
+            },
+        },
+        "missing_info": {
+            "type": "array",
+            "items": {"type": "string"},
+        },
+        "confidence": {
+            "type": "object",
+            "properties": {
+                "score": {"type": ["number", "null"]},
+                "notes": {"type": "string"},
+                "verify_clauses": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+            },
+            "required": ["score", "notes", "verify_clauses"],
+            "additionalProperties": False,
+        },
+    },
+    "required": [
+        "plain_summary",
+        "coverage_highlights",
+        "exclusions_limitations",
+        "denial_reasons",
+        "dispute_angles",
+        "missing_info",
+        "confidence",
+    ],
+    "additionalProperties": False,
+}
+
+
 def _build_policy_overview_block(policy_summary_payload: Dict[str, Any]) -> str:
     """
     Compress the policy summary into a compact, LLM-friendly view:
@@ -264,6 +350,8 @@ def build_denial_aware_report(
         max_retries=3,
         timeout=60.0,
         stage="dispute_report",
+        response_schema=DISPUTE_REPORT_SCHEMA,
+        schema_name="dispute_report",
     )
 
     plain_summary = str(data.get("plain_summary", "") or "").strip()

@@ -55,6 +55,8 @@ def call_llm_json(
     timeout: float = 30.0,
     model: Optional[str] = None,
     stage: Optional[str] = None,
+    response_schema: Optional[Dict[str, Any]] = None,
+    schema_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Call the LLM expecting a JSON object.
@@ -66,6 +68,17 @@ def call_llm_json(
     """
     last_raw: Optional[str] = None
     model_name = model or _get_model_name()
+    if response_schema is None:
+        text_arg = {"format": {"type": "json_object"}}
+    else:
+        text_arg = {
+            "format": {
+                "type": "json_schema",
+                "name": schema_name or stage or "structured_output",
+                "schema": response_schema,
+                "strict": True,
+            }
+        }
 
     for attempt in range(1, max_retries + 1):
         start_time = time.time()
@@ -77,7 +90,7 @@ def call_llm_json(
                 model=model_name,
                 instructions=system_prompt,
                 input=user_prompt,
-                text={"format": {"type": "json_object"}},
+                text=text_arg,
                 temperature=temperature,
                 store=False,
             )
