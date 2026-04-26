@@ -298,6 +298,8 @@ python scripts/benchmark_phase2_baseline.py --mode live \
 
 See `benchmarks/phase2-baseline.md` for the checked-in before-state report and limitations.
 
+The final Phase 2 comparison report is `benchmarks/phase2-final.md`. It keeps the baseline report historical, records the current no-API demo parity check, and documents current live full-vs-focused benchmark results when available.
+
 ### Summarize a policy PDF
 
 ```bash

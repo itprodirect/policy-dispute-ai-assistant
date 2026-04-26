@@ -66,6 +66,12 @@ Do not rebuild this bundle from real client claim data.
 - Phase 2 live pipeline benchmark (requires `OPENAI_API_KEY` and non-sensitive local inputs):
   - `python scripts/benchmark_phase2_baseline.py --mode live --policy-pdf data/raw_policies/HO3_TRUE_FL_2021.pdf --denial-text data/raw_denials/HO3_TRUE_FL_2021_denial.txt --output .tmp/phase2-baseline-live.json`
 
+- Phase 2 live focused benchmark (requires `OPENAI_API_KEY` and non-sensitive local inputs):
+  - `python scripts/benchmark_phase2_baseline.py --mode live --focused --policy-pdf data/raw_policies/HO3_TRUE_FL_2021.pdf --denial-text data/raw_denials/HO3_TRUE_FL_2021_denial.txt --output .tmp/phase2-final-live-focused.json`
+
+- Final Phase 2 benchmark comparison:
+  - See `benchmarks/phase2-final.md`
+
 - CLI (optional):
   - `python -m src.run_baseline_policy_summary path/to/policy.pdf`
   - `python -m src.run_denial_summary data/processed/policy.json path/to/denial.txt`

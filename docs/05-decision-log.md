@@ -99,3 +99,21 @@ Use this format for future entries:
 
 ### Revisit trigger
 - Revisit #18 only when a hosted public demo is needed; revisit #20 after Phase 2 stabilizes.
+
+## 2026-04-26 ET - Close Phase 2 with separate final benchmark report
+
+### Context
+- #46 created a historical before-state benchmark report before Phase 2 model/API/speed work.
+- #53 needed a final comparison without rewriting that baseline history or expanding product scope.
+
+### Decision
+- Keep `benchmarks/phase2-baseline.md` as the immutable historical before-state.
+- Add final comparison in a separate `benchmarks/phase2-final.md`.
+- Close Phase 2 after #53.
+
+### Consequence
+- Future benchmark follow-ups should start from a new issue rather than editing the Phase 2 baseline.
+- Post-Phase-2 work such as #18 deployment prep and #20 walkthrough/screenshot recipe stays separate.
+
+### Revisit trigger
+- Revisit only if a later benchmark issue adds a new measurement scope, telemetry source, or evaluation harness.

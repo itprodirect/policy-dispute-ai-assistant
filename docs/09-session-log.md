@@ -287,3 +287,35 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Start #53 only: final Phase 2 benchmark comparison report, without prompt rewrites, schema/dataclass changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, deployment/auth/storage work, PDF export work, or unrelated refactors.
+
+### 2026-04-26 - Final Phase 2 benchmark comparison
+
+#### Goal
+- Complete #53 as the final Phase 2 issue with a narrow benchmark comparison report.
+
+#### Completed
+- Added a live-mode-only `--focused` option to `scripts/benchmark_phase2_baseline.py`.
+- Added `benchmarks/phase2-final.md`.
+- Preserved `benchmarks/phase2-baseline.md` as the historical before-state report.
+- Recorded deterministic demo parity against the baseline.
+- Recorded current live full and focused measurements for `data/raw_policies/HO3_TRUE_FL_2021.pdf` with `data/raw_denials/HO3_TRUE_FL_2021_denial.txt`.
+- Updated durable docs to mark Phase 2 complete through #53.
+
+#### Decisions
+- Keep the final comparison report separate from the historical baseline report.
+- Close Phase 2 after #53; revisit #18 deployment prep and #20 walkthrough/screenshot recipe separately later.
+
+#### Validation
+- `python -m pytest -q` passed with 85 tests.
+- `python scripts/benchmark_phase2_baseline.py --mode demo --output .tmp/phase2-final-demo.json`
+- `python scripts/benchmark_phase2_baseline.py --mode live --policy-pdf data/raw_policies/HO3_TRUE_FL_2021.pdf --denial-text data/raw_denials/HO3_TRUE_FL_2021_denial.txt --output .tmp/phase2-final-live-full.json`
+- `python scripts/benchmark_phase2_baseline.py --mode live --focused --policy-pdf data/raw_policies/HO3_TRUE_FL_2021.pdf --denial-text data/raw_denials/HO3_TRUE_FL_2021_denial.txt --output .tmp/phase2-final-live-focused.json`
+
+#### Deferred
+- Token/cost telemetry in checked-in benchmark artifacts.
+- A-G quality scoring or evaluation harnesses.
+- Deployment/auth/storage/PDF export work.
+- Public demo work.
+
+#### Next session starter
+- Phase 2 is closed. Pick the next issue explicitly; likely post-Phase-2 candidates are #18 Streamlit deployment prep or #20 walkthrough/screenshot recipe if they are still needed.
