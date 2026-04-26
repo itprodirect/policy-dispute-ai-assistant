@@ -1,4 +1,6 @@
 import json
+import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Iterable, List, Dict
 
@@ -98,6 +100,23 @@ except ImportError:
 
 DATA_PROCESSED_DIR = Path("data/processed")
 SAFE_DATA_PROCESSED_DIR = Path("data/processed_safe")
+DEFAULT_SECTION_SUMMARY_WORKERS = 4
+
+
+def _resolve_section_summary_workers() -> int:
+    raw = os.getenv("SECTION_SUMMARY_MAX_WORKERS")
+    if raw is None or raw == "":
+        return DEFAULT_SECTION_SUMMARY_WORKERS
+
+    try:
+        value = int(raw)
+    except ValueError:
+        return DEFAULT_SECTION_SUMMARY_WORKERS
+
+    if value <= 0:
+        return DEFAULT_SECTION_SUMMARY_WORKERS
+
+    return value
 
 
 def _resolve_output_dir() -> Path:
@@ -127,11 +146,12 @@ def summarize_policy(pdf_path: Path) -> Path:
 
     settings = get_settings()
     persist_raw_text = settings.persist_raw_text
+    max_workers = _resolve_section_summary_workers()
     output_dir = _resolve_output_dir()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    results: List[dict] = []
-    for section_name, section_text in sections.items():
+    def summarize_section_item(item: tuple[str, str]) -> dict:
+        section_name, section_text = item
         print(f"Summarizing section: [cyan]{section_name}[/cyan]")
 
         section_summary: SectionSummary = summarize_section(
@@ -147,7 +167,12 @@ def summarize_policy(pdf_path: Path) -> Path:
         section_dict["section_role"] = classify_section_role(
             section_name, section_text
         )
-        results.append(section_dict)
+        return section_dict
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results: List[dict] = list(
+            executor.map(summarize_section_item, sections.items())
+        )
 
     out_path = output_dir / f"{pdf_path.stem}.json"
 

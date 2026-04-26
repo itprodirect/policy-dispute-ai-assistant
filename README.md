@@ -177,6 +177,10 @@ OPENAI_MODEL="gpt-4.1-mini"
 # OPENAI_MODEL_SECTION_SUMMARY="gpt-4.1-mini"
 # OPENAI_MODEL_DISPUTE_REPORT="gpt-4.1-mini"
 
+# Optional - section summary parallelism
+# Default is 4; set to 1 for sequential behavior.
+# SECTION_SUMMARY_MAX_WORKERS=4
+
 # Data-handling flags
 SAFE_MODE=true          # when true, raw text is not persisted to disk
 PERSIST_RAW_TEXT=false  # only set true if you explicitly want raw text saved
