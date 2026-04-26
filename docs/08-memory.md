@@ -13,10 +13,13 @@ Durable project timeline for future Codex and Claude sessions.
 - Phase 2 Structured Outputs for final dispute report generation is complete via #48 / PR #58.
 - Phase 2 stage-specific model configuration is complete via #49 / PR #60.
 - Phase 2 section-summary latency reduction is complete via #50 / PR #62.
+- Phase 2 redundant live policy PDF reprocessing cleanup is complete via #51 / PR #64.
 - Stage-specific model overrides use `OPENAI_MODEL_<STAGE_UPPER>` and default model behavior is unchanged unless a per-stage override is explicitly set.
 - Section summaries intentionally remain on default `json_object` mode.
 - Section-summary calls now use bounded concurrency via `ThreadPoolExecutor`. `SECTION_SUMMARY_MAX_WORKERS` defaults to 4, and `SECTION_SUMMARY_MAX_WORKERS=1` forces sequential behavior.
-- Next: start #51 redundant PDF reprocessing cleanup in the live pipeline only. PDF reprocessing cleanup remains deferred to #51. Do not bundle prompt rewrites, report schema changes, benchmark changes, model swaps, telemetry changes, frontend behavior changes, or unrelated refactors in the #51 PR.
+- #51 removed live policy PDF reprocessing by reusing first-pass raw sections for the in-memory citation source map.
+- `section_text_map` is stripped before claim persistence to avoid raw policy text persistence.
+- Next: start #52 focused-analysis mode only. Do not bundle prompt rewrites, report schema changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, benchmark changes, deployment/auth/storage work, PDF export work, or unrelated refactors in the #52 PR.
 
 ## Timeline
 
@@ -34,6 +37,7 @@ Durable project timeline for future Codex and Claude sessions.
 | 2026-04-25 23:19 ET | Structured Outputs for dispute reports merged | #48 / PR #58 | Added strict JSON Schema mode only to final dispute report generation; section summaries remain on `json_object` mode. |
 | 2026-04-25 23:37 ET | Stage-specific model configuration merged | #49 / PR #60 | Added optional `OPENAI_MODEL_<STAGE_UPPER>` overrides while preserving default model behavior unless explicitly configured. |
 | 2026-04-25 23:58 ET | Section-summary concurrency merged | #50 / PR #62 | Added bounded `ThreadPoolExecutor` concurrency for section-summary LLM calls; `SECTION_SUMMARY_MAX_WORKERS=1` remains the sequential kill-switch. |
+| 2026-04-26 00:25 ET | Redundant live policy PDF reprocessing cleanup merged | #51 / PR #64 | Reuses first-pass raw sections for the in-memory citation source map and strips `section_text_map` before claim persistence to avoid raw policy text persistence. |
 
 ## Standing Guardrails
 
