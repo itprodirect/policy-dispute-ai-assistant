@@ -57,6 +57,15 @@ Do not rebuild this bundle from real client claim data.
 - Run app:
   - `streamlit run frontend/app.py`
 
+- Phase 2 baseline benchmark (no API calls):
+  - `python scripts/benchmark_phase2_baseline.py --mode demo`
+
+- Phase 2 baseline benchmark with metrics JSON:
+  - `python scripts/benchmark_phase2_baseline.py --mode demo --output .tmp/phase2-baseline-demo.json`
+
+- Phase 2 live pipeline benchmark (requires `OPENAI_API_KEY` and non-sensitive local inputs):
+  - `python scripts/benchmark_phase2_baseline.py --mode live --policy-pdf data/raw_policies/HO3_TRUE_FL_2021.pdf --denial-text data/raw_denials/HO3_TRUE_FL_2021_denial.txt --output .tmp/phase2-baseline-live.json`
+
 - CLI (optional):
   - `python -m src.run_baseline_policy_summary path/to/policy.pdf`
   - `python -m src.run_denial_summary data/processed/policy.json path/to/denial.txt`
