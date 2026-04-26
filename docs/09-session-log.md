@@ -229,3 +229,30 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Start #51 only: remove redundant PDF reprocessing from the live pipeline, without prompt rewrites, report schema changes, Structured Outputs changes, model configuration changes, retry changes, telemetry changes, benchmark changes, frontend behavior changes, or unrelated refactors.
+
+### 2026-04-26 00:27 ET - Post-#64 hygiene truth sync
+
+#### Goal
+- Confirm #51 / PR #64 post-merge state and align durable docs with #52 as the next intended issue.
+
+#### Completed
+- Confirmed PR #64 is merged and issue #51 is closed.
+- Confirmed #52 is open and next in the Phase 2 order.
+- Updated durable docs to mark #51 complete and #52 next.
+- Recorded that live policy PDF reprocessing was removed by reusing first-pass raw sections for the in-memory citation source map.
+- Recorded that `section_text_map` is stripped before claim persistence to avoid raw policy text persistence.
+
+#### Decisions
+- No new technical decisions.
+
+#### Validation
+- Git/GitHub hygiene checks completed.
+- Docs-only diff reviewed.
+- `git diff --check` passed.
+
+#### Deferred
+- #52 focused-analysis mode remains deferred to the next issue.
+- Prompt rewrites, schema/dataclass changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, benchmark changes, deployment/auth/storage work, and PDF export work remain out of scope.
+
+#### Next session starter
+- Start #52 only: focused-analysis mode, without prompt rewrites, schema/dataclass changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, benchmark changes, deployment/auth/storage work, PDF export work, or unrelated refactors.
