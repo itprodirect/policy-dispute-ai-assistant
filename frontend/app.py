@@ -22,7 +22,6 @@ summarizer_frontier = importlib.import_module("src.summarizer_frontier")
 report_builder = importlib.import_module("src.report_builder")
 schemas = importlib.import_module("src.schemas")
 database = importlib.import_module("src.database")
-sectioning = importlib.import_module("src.sectioning")
 citation_linking = importlib.import_module("src.citation_linking")
 
 is_demo_force_on = config.is_demo_force_on
@@ -39,8 +38,6 @@ save_claim = database.save_claim
 get_all_claims = database.get_all_claims
 get_claim_by_id = database.get_claim_by_id
 delete_claim = database.delete_claim
-split_into_sections = sectioning.split_into_sections
-build_section_text_map = citation_linking.build_section_text_map
 get_citation_display_data = citation_linking.get_citation_display_data
 get_angle_citation_display_data = citation_linking.get_angle_citation_display_data
 
@@ -881,12 +878,9 @@ def _run_full_analysis(
             policy_file.name,
         )
 
-        # Step 1b: Extract raw sections for citation linking (in-memory only)
-        uploaded_pdf_path = Path(policy_result.get("artifacts", {}).get("uploaded_pdf", ""))
-        if uploaded_pdf_path.is_file():
-            policy_text = load_pdf_text(uploaded_pdf_path)
-            raw_sections = split_into_sections(policy_text)
-            section_map = build_section_text_map(raw_sections)
+        # Step 1b: Reuse in-memory section text map from policy analysis.
+        section_map = policy_result.get("section_text_map") or {}
+        if section_map:
             st.session_state[SESSION_KEY_SECTION_MAP] = section_map
 
         # Step 2: denial text
