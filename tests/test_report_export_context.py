@@ -62,6 +62,15 @@ def test_dispute_markdown_export_includes_analysis_mode() -> None:
     assert "- **Mode:** Focused" in markdown
 
 
+def test_dispute_markdown_export_combines_demo_and_analysis_mode() -> None:
+    markdown = render_dispute_markdown(
+        _sample_report(),
+        context={"demo_mode": True, "analysis_mode": "Focused"},
+    )
+
+    assert "- **Mode:** Demo Mode (Focused)" in markdown
+
+
 def test_dispute_docx_export_includes_human_context() -> None:
     docx_bytes = render_dispute_docx(
         _sample_report(),
@@ -95,3 +104,15 @@ def test_dispute_docx_export_includes_analysis_mode() -> None:
     text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
     assert "Mode: Full" in text
+
+
+def test_dispute_docx_export_combines_demo_and_analysis_mode() -> None:
+    docx_bytes = render_dispute_docx(
+        _sample_report(),
+        context={"demo_mode": True, "analysis_mode": "Full"},
+    )
+
+    document = Document(io.BytesIO(docx_bytes))
+    text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+
+    assert "Mode: Demo Mode (Full)" in text
