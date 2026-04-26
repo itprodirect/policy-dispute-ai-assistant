@@ -200,6 +200,65 @@ class _FakeStreamlit:
         return None
 
 
+class _FakeIntakeStreamlit:
+    def __init__(self, policy_file, denial_file) -> None:
+        self.session_state: dict[str, object] = {}
+        self.policy_file = policy_file
+        self.denial_file = denial_file
+        self.successes: list[str] = []
+        self.warnings: list[str] = []
+
+    def __enter__(self) -> "_FakeIntakeStreamlit":
+        return self
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        return None
+
+    def header(self, *args, **kwargs) -> None:
+        return None
+
+    def info(self, *args, **kwargs) -> None:
+        return None
+
+    def caption(self, *args, **kwargs) -> None:
+        return None
+
+    def form(self, *args, **kwargs) -> "_FakeIntakeStreamlit":
+        return self
+
+    def columns(self, count: int):
+        return [self for _ in range(count)]
+
+    def text_input(self, label: str, **kwargs) -> str:
+        if label.startswith("Claim nickname"):
+            return "Kitchen"
+        if label.startswith("State"):
+            return "TX"
+        return ""
+
+    def file_uploader(self, label: str, **kwargs):
+        if label == "Policy PDF":
+            return self.policy_file
+        if label == "Denial letter PDF":
+            return self.denial_file
+        return None
+
+    def form_submit_button(self, *args, **kwargs) -> bool:
+        return True
+
+    def error(self, *args, **kwargs) -> None:
+        return None
+
+    def stop(self) -> None:
+        raise RuntimeError("streamlit stop")
+
+    def success(self, message: str) -> None:
+        self.successes.append(message)
+
+    def warning(self, message: str) -> None:
+        self.warnings.append(message)
+
+
 def test_frontend_live_path_uses_policy_result_section_map_without_reprocessing(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -309,3 +368,43 @@ def test_frontend_live_path_empty_section_map_does_not_overwrite_session_map(
     )
 
     assert fake_st.session_state[frontend_app.SESSION_KEY_SECTION_MAP] is existing_map
+
+
+def test_intake_persistence_strips_section_text_map_without_changing_memory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    policy_file = SimpleNamespace(name="policy.pdf")
+    denial_file = SimpleNamespace(name="denial.pdf")
+    fake_st = _FakeIntakeStreamlit(policy_file, denial_file)
+    raw_policy_text = "RAW POLICY TEXT THAT MUST NOT BE PERSISTED"
+    policy_result = {
+        "policy_name": "policy",
+        "sections_substantive": [],
+        "section_text_map": {"COVERAGE A": raw_policy_text},
+        "artifacts": {"summary_json": "policy.json"},
+    }
+    dispute_result = {"dispute_report": {"plain_summary": "done"}}
+    saved_payloads: list[dict] = []
+
+    monkeypatch.setattr(frontend_app, "st", fake_st)
+    monkeypatch.setattr(frontend_app, "is_demo_force_on", lambda: False)
+    monkeypatch.setattr(
+        frontend_app,
+        "_run_full_analysis",
+        lambda **kwargs: (policy_result, dispute_result),
+    )
+
+    def fake_save_claim(**kwargs) -> int:
+        saved_payloads.append(kwargs)
+        return 123
+
+    monkeypatch.setattr(frontend_app, "save_claim", fake_save_claim)
+
+    frontend_app._render_intake_form()
+
+    assert fake_st.session_state[frontend_app.SESSION_KEY_POLICY] is policy_result
+    assert policy_result["section_text_map"] == {"COVERAGE A": raw_policy_text}
+
+    persisted_policy = saved_payloads[0]["report_json"]["policy_result"]
+    assert "section_text_map" not in persisted_policy
+    assert raw_policy_text not in json.dumps(saved_payloads[0]["report_json"])

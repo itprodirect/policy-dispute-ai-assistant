@@ -1040,6 +1040,9 @@ def _render_intake_form() -> None:
         "denial_filename": denial_file.name,
     }
 
+    policy_result_for_persistence = dict(policy_result)
+    policy_result_for_persistence.pop("section_text_map", None)
+
     # Save to database
     try:
         claim_id = save_claim(
@@ -1048,7 +1051,7 @@ def _render_intake_form() -> None:
             policy_filename=policy_file.name,
             denial_filename=denial_file.name,
             report_json={
-                "policy_result": policy_result,
+                "policy_result": policy_result_for_persistence,
                 "dispute_result": dispute_result,
             },
         )
