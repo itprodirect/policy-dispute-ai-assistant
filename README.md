@@ -195,6 +195,7 @@ The bundled demo-safe dispute report lives in:
 
 - `assets/demo/demo.json`
 - `assets/demo/demo.report.md`
+- `assets/demo/section_text.json`
 
 These tracked files are deterministic demo artifacts, not real client claim data.
 

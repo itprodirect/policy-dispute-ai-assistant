@@ -56,6 +56,7 @@ SESSION_KEY_PAGE = "main_page"
 DEMO_ASSET_DIR = ROOT / "assets" / "demo"
 DEMO_JSON_PATH = DEMO_ASSET_DIR / "demo.json"
 DEMO_MD_PATH = DEMO_ASSET_DIR / "demo.report.md"
+DEMO_SECTION_TEXT_PATH = DEMO_ASSET_DIR / "section_text.json"
 
 
 def _render_framing_badges() -> None:
@@ -125,6 +126,23 @@ def _demo_asset_instructions() -> str:
         f"2) {DEMO_MD_PATH.relative_to(ROOT)}\n"
         "Restore these files from the repository or see RUNBOOK.md for Demo Mode setup."
     )
+
+
+def _load_demo_section_map() -> Dict[str, str]:
+    if not DEMO_SECTION_TEXT_PATH.is_file():
+        return {}
+
+    section_text = json.loads(DEMO_SECTION_TEXT_PATH.read_text(encoding="utf-8"))
+    if not isinstance(section_text, dict):
+        raise RuntimeError(
+            "Demo source text asset must be a JSON object mapping section names to text."
+        )
+
+    return {
+        str(section_name).strip(): str(text).strip()
+        for section_name, text in section_text.items()
+        if str(section_name).strip() and str(text).strip()
+    }
 
 
 def _build_policy_result_from_summary(
@@ -299,7 +317,7 @@ def _load_demo_into_session() -> None:
 
     st.session_state[SESSION_KEY_POLICY] = policy_result
     st.session_state[SESSION_KEY_DISPUTE] = dispute_result
-    st.session_state[SESSION_KEY_SECTION_MAP] = {}
+    st.session_state[SESSION_KEY_SECTION_MAP] = _load_demo_section_map()
     st.session_state[SESSION_KEY_CLAIM_METADATA] = {
         "nickname": "Demo Mode",
         "state": "",
