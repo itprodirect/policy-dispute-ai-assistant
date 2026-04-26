@@ -39,11 +39,20 @@ def _log_to_wandb(metrics: Dict[str, Any]) -> None:
         wandb.log(metrics)
 
 
-def _get_model_name() -> str:
+def _get_model_name(stage: Optional[str] = None) -> str:
     """
-    Resolve the model name, allowing an OPENAI_MODEL override.
+    Resolve the model name with precedence:
+    1. OPENAI_MODEL_<STAGE_UPPER> if stage is provided and set.
+    2. OPENAI_MODEL if set.
+    3. gpt-4.1-mini default.
+
+    Empty-string env vars are treated as unset.
     """
-    return os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
+    if stage:
+        per_stage = os.getenv(f"OPENAI_MODEL_{stage.upper()}")
+        if per_stage:
+            return per_stage
+    return os.getenv("OPENAI_MODEL") or "gpt-4.1-mini"
 
 
 def call_llm_json(
@@ -67,7 +76,7 @@ def call_llm_json(
     - Logs metrics to wandb if a run is active (via wandb_telemetry.start_wandb_run).
     """
     last_raw: Optional[str] = None
-    model_name = model or _get_model_name()
+    model_name = model or _get_model_name(stage=stage)
     if response_schema is None:
         text_arg = {"format": {"type": "json_object"}}
     else:
