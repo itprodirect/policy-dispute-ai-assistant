@@ -280,7 +280,10 @@ def _export_context_rows(
         if value:
             rows.append((label, value))
 
-    if context.get("demo_mode"):
+    analysis_mode = _clean_context_value(context.get("analysis_mode"))
+    if analysis_mode:
+        rows.append(("Mode", analysis_mode))
+    elif context.get("demo_mode"):
         rows.append(("Mode", "Demo Mode"))
 
     return rows

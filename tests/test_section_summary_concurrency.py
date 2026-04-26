@@ -25,6 +25,7 @@ def _run_summarize_policy(
     tmp_path: Path,
     sections: dict[str, str],
     *,
+    focused: bool = False,
     persist_raw_text: bool = False,
     summarize_section: Mock | None = None,
 ) -> dict:
@@ -47,7 +48,10 @@ def _run_summarize_policy(
         )
     monkeypatch.setattr(policy_summary, "summarize_section", summarize_section)
 
-    out_path = policy_summary.summarize_policy(tmp_path / "policy.pdf")
+    out_path = policy_summary.summarize_policy(
+        tmp_path / "policy.pdf",
+        focused=focused,
+    )
 
     return json.loads(out_path.read_text(encoding="utf-8"))
 
@@ -162,6 +166,130 @@ def test_summarize_section_is_invoked_once_per_section(
     )
 
     assert summarize_section.call_count == len(sections)
+
+
+def test_full_analysis_summarizes_every_section_by_default(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.delenv("SECTION_SUMMARY_MAX_WORKERS", raising=False)
+    sections = {
+        "DEFINITIONS": "definition text",
+        "COVERAGE A - DWELLING": "dwelling text",
+        "UNRELATED ENDORSEMENT": "endorsement text",
+    }
+    summarize_section = Mock(
+        side_effect=lambda section_name, section_text: FakeSectionSummary(section_name)
+    )
+
+    payload = _run_summarize_policy(
+        monkeypatch,
+        tmp_path,
+        sections,
+        summarize_section=summarize_section,
+    )
+
+    assert payload["analysis_mode"] == "full"
+    assert summarize_section.call_count == len(sections)
+    assert [section["section_name"] for section in payload["sections"]] == list(
+        sections
+    )
+
+
+def test_focused_false_preserves_full_analysis_behavior(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    sections = {
+        "DEFINITIONS": "definition text",
+        "COVERAGE A - DWELLING": "dwelling text",
+        "UNRELATED ENDORSEMENT": "endorsement text",
+    }
+    summarize_section = Mock(
+        side_effect=lambda section_name, section_text: FakeSectionSummary(section_name)
+    )
+
+    payload = _run_summarize_policy(
+        monkeypatch,
+        tmp_path,
+        sections,
+        focused=False,
+        summarize_section=summarize_section,
+    )
+
+    assert payload["analysis_mode"] == "full"
+    assert summarize_section.call_count == len(sections)
+
+
+def test_focused_analysis_filters_to_canonical_sections_only(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    sections = {
+        "DEFINITIONS": "definition text",
+        "COVERAGE A - DWELLING": "dwelling text",
+        "UNRELATED ENDORSEMENT": "endorsement text",
+        "EXCLUSIONS": "exclusion text",
+    }
+    summarize_section = Mock(
+        side_effect=lambda section_name, section_text: FakeSectionSummary(section_name)
+    )
+
+    payload = _run_summarize_policy(
+        monkeypatch,
+        tmp_path,
+        sections,
+        focused=True,
+        summarize_section=summarize_section,
+    )
+
+    assert payload["analysis_mode"] == "focused"
+    assert [section["section_name"] for section in payload["sections"]] == [
+        "DEFINITIONS",
+        "COVERAGE A - DWELLING",
+        "EXCLUSIONS",
+    ]
+    assert [call.args[0] for call in summarize_section.call_args_list] == [
+        "DEFINITIONS",
+        "COVERAGE A - DWELLING",
+        "EXCLUSIONS",
+    ]
+
+
+def test_focused_analysis_skips_meta_sections(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    sections = {
+        "DEFINITIONS": "This is only a sample policy and not an actual policy.",
+        "EXCLUSIONS": "We do not insure for loss caused by wear and tear.",
+    }
+
+    payload = _run_summarize_policy(
+        monkeypatch,
+        tmp_path,
+        sections,
+        focused=True,
+    )
+
+    assert [section["section_name"] for section in payload["sections"]] == [
+        "EXCLUSIONS"
+    ]
+
+
+def test_focused_selection_preserves_original_section_order() -> None:
+    sections = {
+        "COVERAGE D - LOSS OF USE": "loss of use text",
+        "UNRELATED": "unrelated text",
+        "DEFINITIONS": "definition text",
+        "COVERAGE A - DWELLING": "dwelling text",
+        "CONDITIONS": "conditions text",
+    }
+
+    focused_sections = policy_summary._select_focused_sections(sections)
+
+    assert list(focused_sections) == [
+        "COVERAGE D - LOSS OF USE",
+        "DEFINITIONS",
+        "COVERAGE A - DWELLING",
+        "CONDITIONS",
+    ]
 
 
 def test_section_summary_exception_propagates_and_writes_no_json(

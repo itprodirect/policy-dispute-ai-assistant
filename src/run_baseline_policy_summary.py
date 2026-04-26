@@ -101,6 +101,15 @@ except ImportError:
 DATA_PROCESSED_DIR = Path("data/processed")
 SAFE_DATA_PROCESSED_DIR = Path("data/processed_safe")
 DEFAULT_SECTION_SUMMARY_WORKERS = 4
+FOCUSED_SECTION_ALLOWLIST = {
+    "DEFINITIONS",
+    "EXCLUSIONS",
+    "CONDITIONS",
+    "COVERAGE A - DWELLING",
+    "COVERAGE B - OTHER STRUCTURES",
+    "COVERAGE C - PERSONAL PROPERTY",
+    "COVERAGE D - LOSS OF USE",
+}
 
 
 def _resolve_section_summary_workers() -> int:
@@ -130,7 +139,28 @@ def _resolve_output_dir() -> Path:
     return SAFE_DATA_PROCESSED_DIR if settings.safe_mode else DATA_PROCESSED_DIR
 
 
-def summarize_policy_with_sections(pdf_path: Path) -> tuple[Path, Dict[str, str]]:
+def _select_focused_sections(sections: Dict[str, str]) -> Dict[str, str]:
+    """
+    Select the v1 focused-analysis core section set, preserving detected order.
+    """
+    focused_sections: Dict[str, str] = {}
+
+    for section_name, raw_text in sections.items():
+        canonical_name = (section_name or "").strip().upper()
+        if canonical_name not in FOCUSED_SECTION_ALLOWLIST:
+            continue
+        if classify_section_role(section_name, raw_text) == "meta":
+            continue
+        focused_sections[section_name] = raw_text
+
+    return focused_sections
+
+
+def summarize_policy_with_sections(
+    pdf_path: Path,
+    *,
+    focused: bool = False,
+) -> tuple[Path, Dict[str, str]]:
     """
     End-to-end pipeline for a single policy PDF:
     - load text
@@ -144,6 +174,7 @@ def summarize_policy_with_sections(pdf_path: Path) -> tuple[Path, Dict[str, str]
 
     print("Splitting into sections...")
     sections: Dict[str, str] = split_into_sections(text)
+    sections_to_summarize = _select_focused_sections(sections) if focused else sections
 
     settings = get_settings()
     persist_raw_text = settings.persist_raw_text
@@ -172,7 +203,7 @@ def summarize_policy_with_sections(pdf_path: Path) -> tuple[Path, Dict[str, str]
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         results: List[dict] = list(
-            executor.map(summarize_section_item, sections.items())
+            executor.map(summarize_section_item, sections_to_summarize.items())
         )
 
     out_path = output_dir / f"{pdf_path.stem}.json"
@@ -180,6 +211,7 @@ def summarize_policy_with_sections(pdf_path: Path) -> tuple[Path, Dict[str, str]
     payload = {
         "policy_id": pdf_path.stem,
         "policy_path": str(pdf_path),
+        "analysis_mode": "focused" if focused else "full",
         "sections": results,
     }
 
@@ -192,11 +224,15 @@ def summarize_policy_with_sections(pdf_path: Path) -> tuple[Path, Dict[str, str]
     return out_path, sections
 
 
-def summarize_policy(pdf_path: Path) -> Path:
+def summarize_policy(
+    pdf_path: Path,
+    *,
+    focused: bool = False,
+) -> Path:
     """
     End-to-end pipeline for a single policy PDF, returning only the JSON path.
     """
-    out_path, _sections = summarize_policy_with_sections(pdf_path)
+    out_path, _sections = summarize_policy_with_sections(pdf_path, focused=focused)
     return out_path
 
 

@@ -66,6 +66,8 @@ def _resolve_dispute_output_dir() -> Path:
 def run_policy_analysis(
     policy_file_bytes: bytes,
     policy_filename: str,
+    *,
+    focused: bool = False,
 ) -> Dict[str, Any]:
     """
     High-level service for the v0 frontend.
@@ -90,11 +92,15 @@ def run_policy_analysis(
 
     try:
         # This runs your existing end-to-end pipeline (PDF -> sections -> LLM summaries -> JSON).
-        summary_json_path, raw_sections = summarize_policy_with_sections(pdf_path)
+        summary_json_path, raw_sections = summarize_policy_with_sections(
+            pdf_path,
+            focused=focused,
+        )
         section_text_map = build_section_text_map(raw_sections)
 
         # Normalise into PolicyReport
         summary_data = json.loads(summary_json_path.read_text(encoding="utf-8"))
+        analysis_mode = str(summary_data.get("analysis_mode") or "full")
         policy_report = build_policy_report(summary_data)
 
         sections_substantive = _strip_raw_text(policy_report.sections_substantive)
@@ -108,6 +114,7 @@ def run_policy_analysis(
         return {
             "policy_name": policy_report.policy_name,
             "source_path": policy_report.source_path,
+            "analysis_mode": analysis_mode,
             "stats": {
                 "num_sections": policy_report.num_sections,
                 "num_unknown_sections": policy_report.num_unknown_sections,
@@ -122,6 +129,7 @@ def run_policy_analysis(
                 "uploaded_pdf": str(pdf_path),
                 "safe_mode": settings.safe_mode,
                 "persist_raw_text": settings.persist_raw_text,
+                "analysis_mode": analysis_mode,
             },
             "markdown": markdown_text,
         }
