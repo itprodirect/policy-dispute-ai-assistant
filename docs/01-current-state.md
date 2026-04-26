@@ -28,6 +28,7 @@ Phase 1 is complete. The app remains a Streamlit research prototype with determi
 - PR #60: #49 stage-specific model configuration via `OPENAI_MODEL_<STAGE_UPPER>`.
 - PR #62: #50 bounded concurrency for section-summary LLM calls.
 - PR #64: #51 redundant live policy PDF reprocessing cleanup.
+- PR #66: #52 focused-analysis mode.
 
 ## Current Phase
 
@@ -41,7 +42,7 @@ Phase 1C local/demo trust polish is complete with #21 Demo Mode citation/source 
 
 #20 walkthrough video and screenshot recipe is intentionally deferred because walkthrough/video work should wait until after Phase 2 stabilizes.
 
-Phase 2 baseline benchmarking is complete via #46 / PR #54. #47 Responses API migration is complete via PR #56. #48 Structured Outputs is complete via PR #58 for final dispute report generation only. #49 stage-specific model configuration is complete via PR #60. #50 section-summary latency reduction is complete via PR #62. #51 redundant live policy PDF reprocessing cleanup is complete via PR #64.
+Phase 2 baseline benchmarking is complete via #46 / PR #54. #47 Responses API migration is complete via PR #56. #48 Structured Outputs is complete via PR #58 for final dispute report generation only. #49 stage-specific model configuration is complete via PR #60. #50 section-summary latency reduction is complete via PR #62. #51 redundant live policy PDF reprocessing cleanup is complete via PR #64. #52 focused-analysis mode is complete via PR #66.
 
 Stage-specific model overrides are available through `OPENAI_MODEL_<STAGE_UPPER>`, such as `OPENAI_MODEL_SECTION_SUMMARY` and `OPENAI_MODEL_DISPUTE_REPORT`. Default model behavior is unchanged unless a per-stage override is explicitly set.
 
@@ -49,7 +50,11 @@ Section summaries intentionally remain on the default `json_object` mode. Sectio
 
 PR #64 removed live policy PDF reprocessing by reusing the first-pass raw sections for the in-memory citation source map. `section_text_map` is stripped before claim persistence to avoid persisting raw policy text with saved claims.
 
-The next intended issue is #52 focused-analysis mode. Do not start #52 as part of post-#64 hygiene; no focused-analysis mode, prompt changes, dataclass/schema refactors, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, benchmark changes, deployment/auth/storage work, or PDF export work have started.
+PR #66 added explicit opt-in focused-analysis mode. Full analysis remains the default. Focused mode filters policy sections before section-summary LLM calls to a canonical core-section allowlist: `DEFINITIONS`, `EXCLUSIONS`, `CONDITIONS`, `COVERAGE A - DWELLING`, `COVERAGE B - OTHER STRUCTURES`, `COVERAGE C - PERSONAL PROPERTY`, and `COVERAGE D - LOSS OF USE`. Focused mode skips obvious meta sections. It did not change prompts, report schemas/dataclasses, Structured Outputs behavior, model defaults, or stage-specific model config. Section-summary concurrency behavior is unchanged except that focused mode filters the input section list before `executor.map`.
+
+Focused mode preserves citation/source accordion behavior: `section_text_map` still comes from full raw sections, while raw policy section text is still stripped before claim persistence. Export context now includes a Mode row, including Demo Mode plus Focused/Full combinations. PR #66 validation: `python -m pytest -q` passed with 85 tests.
+
+Phase 2 is complete through #52. The next intended issue is #53 P2-7 Add final Phase 2 benchmark comparison report. Do not start #53 as part of post-#52 docs sync.
 
 ## Local Cleanup
 
