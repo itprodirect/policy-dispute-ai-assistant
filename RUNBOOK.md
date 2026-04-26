@@ -31,6 +31,7 @@ Deterministic demo files live here:
 
 - `assets/demo/demo.json`
 - `assets/demo/demo.report.md`
+- `assets/demo/section_text.json`
 
 ### Steps
 
@@ -45,6 +46,7 @@ The demo assets are tracked in the repository. Restore these files from git:
 
 - `assets/demo/demo.json`
 - `assets/demo/demo.report.md`
+- `assets/demo/section_text.json`
 
 Do not rebuild this bundle from real client claim data.
 
