@@ -24,14 +24,22 @@ Use this workflow for Codex, Claude Code, and future agent sessions.
 
 ## Session Logging
 
-Use lightweight session logs when a session is more than a quick one-command maintenance task.
+Use `docs/09-session-log.md` for meaningful sessions that change project direction, durable docs, or implementation state.
 
-- Create a new `logs/YYYY-MM-DD_<topic>.md` from `logs/SESSION_TEMPLATE.md` at the start of the session.
-- Keep logs short.
-- Capture Goal, Decisions, Friction, Next - Immediate, and Restart Test.
-- Do not edit `logs/SESSION_TEMPLATE.md` directly.
+- Keep entries short.
+- Capture Goal, Completed, Decisions, Validation, Deferred, and Next session starter.
+- Do not use `logs/` unless the issue explicitly requires archival session artifacts.
 
-See `logs/README.md` and `logs/SESSION_TEMPLATE.md`.
+## Session closeout protocol
+
+At the end of a meaningful session:
+
+1. Update `docs/06-heartbeat.md` with current truth and next action.
+2. Add a `docs/09-session-log.md` entry.
+3. Add a `docs/05-decision-log.md` entry only if a meaningful decision was made.
+4. Update `docs/08-memory.md` only for durable milestones, not routine work.
+5. Keep docs concise and factual.
+6. Do not update archive/log/screenshot files unless the issue explicitly requires it.
 
 ## PR Closeout
 

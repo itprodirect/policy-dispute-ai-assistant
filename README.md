@@ -84,6 +84,13 @@ For current project status, architecture, roadmap, and agent workflow notes, sta
 - `docs/03-roadmap.md`
 - `docs/04-agent-workflow.md`
 
+Durable project history lives in:
+
+- `docs/05-decision-log.md`
+- `docs/06-heartbeat.md`
+- `docs/08-memory.md`
+- `docs/09-session-log.md`
+
 ---
 
 ## Repo structure

@@ -1,20 +1,31 @@
 # Memory
 
-Durable context for future Codex and Claude sessions.
+Durable project timeline for future Codex and Claude sessions.
+
+## Current Baseline
 
 - Repo: `policy-dispute-ai-assistant`.
 - Current branch baseline: `main`.
-- Phase 1A demo polish is complete.
-- Phase 1B technical closeout is complete.
-- Phase 1C local/demo trust polish is complete.
+- Phase 1 is complete.
 - #18 Streamlit Community Cloud deployment prep and #20 walkthrough video/screenshot recipe are intentionally deferred.
-- Phase 2 model/speed refactor has not started.
-- Next: Phase 2 baseline benchmarking. Do not start Responses API, Structured Outputs, or model swaps before the baseline exists.
-- Recent merged PRs: #34 docs wrap, #35 README screenshot polish, #38 pytest CI, #39 stale artifact cleanup, #41 Demo Mode citation/source accordions, #42 Demo source-map loading hardening, #43 export context polish.
-- Final README screenshots live in `docs/screenshots/` and should remain unchanged unless a focused screenshot task requires it.
-- Local screenshot candidates were moved outside the repo to `C:\Users\user\Desktop\policy-dispute-screenshot-candidates-archive\`.
+- Phase 2 has not started.
+- Next: Phase 2 baseline benchmarking. Do not start Responses API, Structured Outputs, model swaps, prompt changes, schema changes, or speed refactors before the baseline exists.
+
+## Timeline
+
+| Date/Time ET | Event | Issue/PR | Why it matters |
+| --- | --- | --- | --- |
+| 2026-04-25 17:37 ET | Phase 1A demo polish wrapped | PR #34 | Established the demo-hardening baseline and research/not-legal-advice framing. |
+| 2026-04-25 19:24 ET | CI basics added | #19 / PR #38 | Made `python -m pytest -q` the automated merge gate. |
+| 2026-04-25 19:30 ET | Stale artifact cleanup documented | #22 / PR #39 | Clarified runtime artifact paths and removed stale `frontend/data/` confusion. |
+| 2026-04-25 20:36 ET | Demo citation/source accordions completed | #21 / PR #41 | Made bundled demo citations inspectable without live API calls. |
+| 2026-04-25 20:45 ET | Demo source-map loading hardened | PR #42 | Reduced fragility in deterministic demo source lookup. |
+| 2026-04-25 21:07 ET | Export context polish completed | #23 / PR #43 | Added human-readable export context and human/AI grouping. |
+| 2026-04-25 21:42 ET | Phase 1 wrapped and Phase 2 handoff recorded | PR #44 | Marked Phase 1 complete, deferred #18/#20, and required Phase 2 to start with baseline benchmarking. |
+
+## Standing Guardrails
+
 - Preserve research prototype, AI-generated, not-legal-advice, and demo-safe framing.
 - Keep work one issue per PR.
-- True Phase 2 remains reserved for the model/speed/API refactor: Responses API, Structured Outputs, stage-specific model configuration, speed/pipeline work, and benchmarking.
-- Prompt rewrites, report schema changes, backend rebuild, auth, users, billing, and storage are out of scope across all phases unless a future explicit issue changes that boundary.
 - Do not commit secrets, real client data, real claim names, claim numbers, or fake client proof.
+- Keep routine logs, archived docs, and screenshots unchanged unless an issue explicitly requires them.
