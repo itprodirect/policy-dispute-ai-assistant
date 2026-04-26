@@ -256,3 +256,34 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Start #52 only: focused-analysis mode, without prompt rewrites, schema/dataclass changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, benchmark changes, deployment/auth/storage work, PDF export work, or unrelated refactors.
+
+### 2026-04-26 - Post-#66 hygiene truth sync
+
+#### Goal
+- Confirm #52 / PR #66 post-merge state and align durable docs with #53 as the next intended issue.
+
+#### Completed
+- Confirmed PR #66 is merged and #52 focused-analysis mode is complete.
+- Updated durable docs to mark Phase 2 complete through #52.
+- Recorded that focused-analysis mode is explicit opt-in and full analysis remains the default.
+- Recorded that focused mode filters policy sections before section-summary LLM calls to the canonical core-section allowlist: `DEFINITIONS`, `EXCLUSIONS`, `CONDITIONS`, `COVERAGE A - DWELLING`, `COVERAGE B - OTHER STRUCTURES`, `COVERAGE C - PERSONAL PROPERTY`, and `COVERAGE D - LOSS OF USE`.
+- Recorded that focused mode skips obvious meta sections.
+- Recorded that PR #66 did not change prompts, report schemas/dataclasses, Structured Outputs behavior, model defaults, or stage-specific model config.
+- Recorded that section-summary concurrency behavior remains unchanged except focused mode filters the input section list before `executor.map`.
+- Recorded that `section_text_map` still comes from full raw sections for citation/source accordions and raw policy section text is still not persisted.
+- Recorded that export context includes Mode, including Demo Mode plus Focused/Full combinations.
+
+#### Decisions
+- No new technical decisions.
+- No decision-log update because there is no existing Phase 2 decision-log pattern for this kind of post-merge truth sync.
+
+#### Validation
+- PR #66 validation: `python -m pytest -q` passed with 85 tests.
+- This PR is docs-only; tests were not run for the docs sync.
+
+#### Deferred
+- #53 P2-7 Add final Phase 2 benchmark comparison report remains deferred to the next issue.
+- Prompt rewrites, schema/dataclass changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, deployment/auth/storage work, PDF export work, and unrelated refactors remain out of scope.
+
+#### Next session starter
+- Start #53 only: final Phase 2 benchmark comparison report, without prompt rewrites, schema/dataclass changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, deployment/auth/storage work, PDF export work, or unrelated refactors.
