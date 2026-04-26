@@ -22,6 +22,7 @@ Phase 1 is complete. The app remains a Streamlit research prototype with determi
 - PR #41: Demo Mode citation/source accordions.
 - PR #42: Demo source-map loading hardening.
 - PR #43: human-readable export context and human/AI export grouping.
+- PR #54: Phase 2 baseline benchmark harness and checked-in no-API baseline report.
 
 ## Current Phase
 
@@ -35,7 +36,7 @@ Phase 1C local/demo trust polish is complete with #21 Demo Mode citation/source 
 
 #20 walkthrough video and screenshot recipe is intentionally deferred because walkthrough/video work should wait until after Phase 2 stabilizes.
 
-Next step is Phase 2 baseline benchmarking. No Phase 2 implementation has started.
+Phase 2 baseline benchmarking is complete via #46 / PR #54. The next intended issue is #47 Responses API migration. No #47 work, Structured Outputs work, prompt/schema changes, model swaps, PDF processing changes, or speed refactors have started.
 
 ## Local Cleanup
 

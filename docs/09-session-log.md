@@ -101,4 +101,29 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 - Structured Outputs, model swaps, prompt/schema changes, and speed refactors.
 
 #### Next session starter
-- Review and merge the #46 PR, then use the baseline before starting #47 or any other Phase 2 implementation work.
+- Use the merged #46 baseline before starting #47 Responses API migration.
+
+### 2026-04-25 22:32 ET - Post-#54 hygiene truth sync
+
+#### Goal
+- Confirm #46 / PR #54 post-merge state and align project docs with #47 as the next intended issue.
+
+#### Completed
+- Confirmed PR #54 is merged and issue #46 is closed.
+- Confirmed #47 is open.
+- Updated current-state docs to mark #46 complete and #47 next.
+
+#### Decisions
+- No new technical decisions.
+
+#### Validation
+- Git/GitHub hygiene checks completed.
+- Docs-only diff reviewed.
+
+#### Deferred
+- Local deletion of the fully merged #46 branch.
+- Removal of ignored `.tmp/phase2-baseline-demo.json`.
+- #47 Responses API migration.
+
+#### Next session starter
+- Start #47 only: Responses API migration, without Structured Outputs, model swaps, prompt/schema changes, PDF processing changes, or speed refactors.
