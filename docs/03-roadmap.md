@@ -32,19 +32,19 @@ Intentionally deferred:
 - #18 Streamlit Community Cloud deployment prep - revisit only when a hosted public demo is needed.
 - #20 walkthrough video/screenshot recipe - revisit after Phase 2 stabilizes.
 
-## Phase 2: Model and speed refactor - baseline complete
+## Phase 2: Model and speed refactor - Responses API migration complete
 
-True Phase 2 remains reserved for model/speed/API refactor work. Baseline measurement is complete via #46 / PR #54. The next intended issue is #47 Responses API migration.
+True Phase 2 remains reserved for model/speed/API refactor work. Baseline measurement is complete via #46 / PR #54. The Responses API migration is complete via #47 / PR #56. The next intended issue is #48 Structured Outputs.
 
 Gating rule:
 
-Do not start Structured Outputs, model swaps, prompt/schema changes, PDF processing changes, or speed refactors before #47 is handled separately.
+Handle #48 separately. Do not bundle model swaps, prompt rewrites, report schema changes, PDF processing changes, or speed refactors into the Structured Outputs PR.
 
 Order:
 
 1. Baseline benchmarking and current-state measurement: complete via #46 / PR #54.
-2. Replace the Chat Completions wrapper with the Responses API: next via #47.
-3. Add Structured Outputs schemas for sectioning and dispute report generation.
+2. Replace the Chat Completions wrapper with the Responses API: complete via #47 / PR #56.
+3. Add Structured Outputs schemas for sectioning and dispute report generation: next via #48.
 4. Add stage-specific model configuration.
 5. Speed work: parallelize per-section LLM calls and remove redundant PDF reprocessing in the live pipeline.
 6. Add focused-analysis mode.
