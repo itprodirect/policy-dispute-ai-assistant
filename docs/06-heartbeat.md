@@ -1,23 +1,26 @@
 # Heartbeat
 
-Date: 2026-04-25
+Last updated: 2026-04-25 21:50 ET
 
-## Status
+## Current Phase
+- Phase 1 is complete: Phase 1A demo polish, Phase 1B technical closeout, and Phase 1C local/demo trust polish.
+- Phase 2 model/speed refactor has not started.
 
-- Phase 1A demo polish: complete.
-- Phase 1B technical closeout: complete.
-- Phase 1C local/demo trust polish: complete via PR #41, PR #42, and PR #43.
-- #18 deployment prep: intentionally deferred.
-- #20 walkthrough/video recipe: intentionally deferred until after Phase 2 stabilizes.
-- Phase 2 model/speed refactor: not started.
-- Next step: baseline benchmarking.
+## Current Truth
+- PR #44 wrapped Phase 1 and handed off to Phase 2 baseline benchmarking.
+- #21 Demo Mode citation/source accordions are complete via PR #41.
+- Demo source-map loading hardening is complete via PR #42.
+- #23 human-readable export context and human/AI export grouping are complete via PR #43.
+- The repo remains a research prototype with AI-generated and not-legal-advice framing.
 
-## Current Watchouts
+## Next Action
+- Start Phase 2 with baseline benchmarking and current-state measurement against the demo bundle.
 
-- Keep phase boundaries clear. #18 and #20 are intentionally deferred, not missing from the roadmap.
-- Do not start Responses API, Structured Outputs, model swaps, or speed refactors before baseline benchmarking exists.
-- Do not mix Phase 2 implementation work into docs-only wrap PRs.
-- Do not change prompts or report schemas as part of docs, CI, or deployment work.
-- Keep public-demo safety centered on deterministic Demo Mode and `DEMO_FORCE_ON`.
-- Do not commit local runtime artifacts, real claim data, secrets, or screenshot candidates.
-- Preserve the research prototype / not legal advice framing in README, UI, and generated reports.
+## Deferred
+- #18 Streamlit deployment prep — deferred because hosted deployment is not needed yet and adds surface area.
+- #20 walkthrough/video recipe — deferred until after Phase 2 model/API/speed upgrades stabilize.
+
+## Watchouts
+- Phase 2 must start with baseline benchmarking.
+- Do not start Responses API, Structured Outputs, model swaps, prompt changes, schema changes, or speed refactors before the baseline exists.
+- Preserve research prototype / AI-generated / not legal advice framing.

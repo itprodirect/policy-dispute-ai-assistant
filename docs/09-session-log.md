@@ -1,0 +1,76 @@
+# Session Log
+
+Purpose:
+Track real working sessions so future AI/dev sessions can quickly understand what happened, what changed, and what to do next.
+
+## Entry format
+
+### YYYY-MM-DD HH:MM ET — Short session title
+
+#### Goal
+- What this session was trying to accomplish.
+
+#### Completed
+- What changed.
+- PRs/issues touched.
+
+#### Decisions
+- Any decisions made.
+- Link to `docs/05-decision-log.md` when relevant.
+
+#### Validation
+- Tests/checks/run results, if any.
+
+#### Deferred
+- Anything intentionally postponed.
+
+#### Next session starter
+- The exact next recommended action.
+
+### 2026-04-25 21:07 ET — Phase 1C trust polish
+
+#### Goal
+- Complete local/demo trust polish after Phase 1A and Phase 1B.
+
+#### Completed
+- #21 Demo Mode citation/source accordions completed via PR #41.
+- Demo source-map loading hardened via PR #42.
+- #23 human-readable export context and human/AI export grouping completed via PR #43.
+
+#### Decisions
+- Keep hosted deployment prep separate from local/demo trust polish.
+- See `docs/05-decision-log.md` for related Phase 1C and deferral decisions.
+
+#### Validation
+- PR-level validation completed in PR #41, PR #42, and PR #43.
+
+#### Deferred
+- #18 Streamlit Community Cloud deployment prep.
+- #20 walkthrough video/screenshot recipe.
+
+#### Next session starter
+- Wrap Phase 1 in durable docs and make Phase 2 start with baseline benchmarking.
+
+### 2026-04-25 21:42 ET — Phase 1 wrap and Phase 2 handoff
+
+#### Goal
+- Record Phase 1 completion, intentional deferrals, and the Phase 2 baseline gate.
+
+#### Completed
+- PR #44 updated durable docs to mark Phase 1 complete.
+- Recorded #18 and #20 as intentional deferrals.
+- Set Phase 2 order to begin with baseline benchmarking before model/API/speed work.
+
+#### Decisions
+- Phase 2 must start with baseline benchmarking.
+- See `docs/05-decision-log.md` for the Phase 1C wrap decision.
+
+#### Validation
+- PR #44 validated docs-only scope and grep checks for stale Phase 1C/#18/Future CI wording.
+
+#### Deferred
+- #18 Streamlit Community Cloud deployment prep remains deferred until a hosted public demo is needed.
+- #20 walkthrough video/screenshot recipe remains deferred until after Phase 2 stabilizes.
+
+#### Next session starter
+- Start Phase 2 baseline benchmarking and current-state measurement against the demo bundle.
