@@ -22,7 +22,7 @@ This is the current high-level architecture. It describes what exists now; it do
 - `src/schemas.py` defines the report data structures.
 - `src/demo_api.py` provides service-style helpers used by the Streamlit frontend.
 - `src/report_builder.py` renders Markdown and Word exports.
-- `src/llm_client.py` is the current OpenAI wrapper.
+- `src/llm_client.py` is the current OpenAI Responses API wrapper.
 
 ## Reports and Exports
 
