@@ -4,6 +4,7 @@ import importlib
 import json
 import sys
 import time
+from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
@@ -487,13 +488,46 @@ def _dict_to_dispute_report(d: Dict[str, Any]) -> DisputeReport:
     )
 
 
+def _build_export_context(
+    *,
+    claim_metadata: Dict[str, Any] | None = None,
+    policy_filename: str | None = None,
+    denial_filename: str | None = None,
+    demo_mode: bool = False,
+) -> Dict[str, Any]:
+    claim_metadata = claim_metadata or {}
+    context: Dict[str, Any] = {"generated_date": date.today().isoformat()}
+
+    nickname = str(claim_metadata.get("nickname", "") or "").strip()
+    if nickname:
+        context["claim_title"] = nickname
+
+    carrier = str(claim_metadata.get("carrier", "") or "").strip()
+    if carrier:
+        context["carrier"] = carrier
+
+    state = str(claim_metadata.get("state", "") or "").strip()
+    if state:
+        context["state"] = state
+
+    if policy_filename:
+        context["policy_filename"] = policy_filename
+    if denial_filename:
+        context["denial_filename"] = denial_filename
+    if demo_mode:
+        context["demo_mode"] = True
+
+    return context
+
+
 def _render_hero(
     dispute_report: Dict[str, Any],
-    dispute_markdown: str,
     policy_label: str,
     denial_label: str,
     policy_filename: str | None = None,
     denial_filename: str | None = None,
+    claim_metadata: Dict[str, Any] | None = None,
+    demo_mode: bool = False,
 ) -> None:
     st.subheader("Dispute overview")
 
@@ -551,17 +585,31 @@ def _render_hero(
             except (TypeError, ValueError):
                 st.write(f"**Confidence:** {score}")
 
-        st.markdown("##### Actions")
+        report_obj = _dict_to_dispute_report(dispute_report)
+        export_context = _build_export_context(
+            claim_metadata=claim_metadata,
+            policy_filename=policy_filename,
+            denial_filename=denial_filename,
+            demo_mode=demo_mode,
+        )
+        export_docx = render_dispute_docx(report_obj, context=export_context)
+        export_markdown = render_dispute_markdown(report_obj, context=export_context)
+
+        st.markdown("##### Exports")
         st.caption("Download the full A–G dispute write-up.")
+        st.markdown("**Human-friendly exports**")
+        st.caption("For human review, sharing draft notes, or offline review.")
         st.download_button(
-            "Download as Word (.docx)",
-            data=render_dispute_docx(_dict_to_dispute_report(dispute_report)),
+            "Word/DOCX report",
+            data=export_docx,
             file_name=f"{policy_label}__{denial_label}.dispute.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         )
+        st.markdown("**AI / workflow-friendly exports**")
+        st.caption("For AI agents, automation, technical review, and workflow handoff.")
         st.download_button(
-            "Download as Markdown",
-            data=dispute_markdown,
+            "Markdown report",
+            data=export_markdown,
             file_name=f"{policy_label}__{denial_label}.dispute.md",
             mime="text/markdown",
         )
@@ -884,7 +932,17 @@ def _run_full_analysis(
         )
         dispute_obj.denial_id = Path(denial_path).stem or "denial"
 
-        markdown = render_dispute_markdown(dispute_obj)
+        markdown = render_dispute_markdown(
+            dispute_obj,
+            context=_build_export_context(
+                claim_metadata={
+                    "nickname": claim_nickname.strip(),
+                    "state": state.strip(),
+                },
+                policy_filename=policy_file.name,
+                denial_filename=denial_file.name,
+            ),
+        )
         dispute_report_dict = dispute_obj.to_dict()
 
         dispute_result: Dict[str, Any] = {
@@ -1024,11 +1082,12 @@ def _render_results_section() -> None:
 
     _render_hero(
         dispute_report,
-        dispute_result.get("markdown", "") or "",
         policy_label,
         denial_label,
         policy_filename=claim_metadata.get("policy_filename"),
         denial_filename=claim_metadata.get("denial_filename"),
+        claim_metadata=claim_metadata,
+        demo_mode=bool(st.session_state.get(SESSION_KEY_DEMO_MODE)),
     )
 
     st.markdown("### Detailed dispute views")
@@ -1120,11 +1179,14 @@ def _render_claim_history_page() -> None:
 
             _render_hero(
                 dispute_report,
-                dispute_result.get("markdown", "") or "",
                 policy_label,
                 denial_label,
                 policy_filename=claim.policy_filename,
                 denial_filename=claim.denial_filename,
+                claim_metadata={
+                    "nickname": claim.nickname,
+                    "state": claim.state,
+                },
             )
 
             st.markdown("### Detailed dispute views")

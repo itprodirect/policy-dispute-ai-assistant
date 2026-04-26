@@ -4,6 +4,7 @@ import argparse
 import io
 import json
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Iterable
 
@@ -234,7 +235,61 @@ def main() -> None:
     print(f"[bold]Done.[/bold] Built {count} report file(s).")
 
 
-def render_dispute_markdown(report: DisputeReport) -> str:
+def _clean_context_value(value: Any) -> str:
+    return str(value or "").strip()
+
+
+def _generated_date(context: Dict[str, Any] | None) -> str:
+    if context:
+        explicit = _clean_context_value(
+            context.get("generated_date") or context.get("generated_at")
+        )
+        if explicit:
+            return explicit
+    return date.today().isoformat()
+
+
+def _export_context_rows(
+    report: DisputeReport,
+    context: Dict[str, Any] | None = None,
+) -> List[tuple[str, str]]:
+    context = context or {}
+    rows: List[tuple[str, str]] = []
+
+    for label, key in [
+        ("Claim", "claim_title"),
+        ("Carrier", "carrier"),
+        ("State", "state"),
+    ]:
+        value = _clean_context_value(context.get(key))
+        if value:
+            rows.append((label, value))
+
+    rows.append(("Generated date", _generated_date(context)))
+
+    if report.policy_id:
+        rows.append(("Policy ID", str(report.policy_id)))
+    if report.denial_id:
+        rows.append(("Denial ID", str(report.denial_id)))
+
+    for label, key in [
+        ("Policy file", "policy_filename"),
+        ("Denial file", "denial_filename"),
+    ]:
+        value = _clean_context_value(context.get(key))
+        if value:
+            rows.append((label, value))
+
+    if context.get("demo_mode"):
+        rows.append(("Mode", "Demo Mode"))
+
+    return rows
+
+
+def render_dispute_markdown(
+    report: DisputeReport,
+    context: Dict[str, Any] | None = None,
+) -> str:
     """
     Render a DisputeReport (A–G structure) to Markdown.
     """
@@ -245,14 +300,12 @@ def render_dispute_markdown(report: DisputeReport) -> str:
     lines.append(f"# {title}")
     lines.append("")
 
-    meta_lines: List[str] = []
-    if report.policy_id:
-        meta_lines.append(f"- Policy: `{report.policy_id}`")
-    if report.denial_id:
-        meta_lines.append(f"- Denial: `{report.denial_id}`")
-
-    if meta_lines:
-        lines.extend(meta_lines)
+    context_rows = _export_context_rows(report, context)
+    if context_rows:
+        lines.append("## Report context")
+        lines.append("")
+        for label, value in context_rows:
+            lines.append(f"- **{label}:** {value}")
         lines.append("")
 
     lines.append(
@@ -360,7 +413,10 @@ def render_dispute_markdown(report: DisputeReport) -> str:
     return "\n".join(lines)
 
 
-def render_dispute_docx(report: DisputeReport) -> bytes:
+def render_dispute_docx(
+    report: DisputeReport,
+    context: Dict[str, Any] | None = None,
+) -> bytes:
     """
     Render a DisputeReport (A–G structure) to a Word document (.docx).
 
@@ -378,14 +434,13 @@ def render_dispute_docx(report: DisputeReport) -> bytes:
     title.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
     # Metadata
-    if report.policy_id or report.denial_id:
-        meta_para = doc.add_paragraph()
-        if report.policy_id:
-            meta_para.add_run(f"Policy: {report.policy_id}").bold = True
-            if report.denial_id:
-                meta_para.add_run("  |  ")
-        if report.denial_id:
-            meta_para.add_run(f"Denial: {report.denial_id}").bold = True
+    context_rows = _export_context_rows(report, context)
+    if context_rows:
+        doc.add_heading("Report Context", level=1)
+        for label, value in context_rows:
+            para = doc.add_paragraph()
+            para.add_run(f"{label}: ").bold = True
+            para.add_run(value)
 
     # Framing disclaimer
     disclaimer = doc.add_paragraph()
