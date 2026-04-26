@@ -34,6 +34,7 @@ Copy `.env.example` to `.env` and set:
 - `OPENAI_API_KEY` (required)
 - `OPENAI_MODEL` (defaults to `gpt-4.1-mini`)
 - `OPENAI_MODEL_<STAGE_UPPER>` optionally overrides `OPENAI_MODEL` for a specific stage, such as `OPENAI_MODEL_SECTION_SUMMARY` or `OPENAI_MODEL_DISPUTE_REPORT`
+- `SECTION_SUMMARY_MAX_WORKERS` optional; default 4. Bounds parallel section-summary LLM calls. Set to 1 to force sequential behavior.
 - `SAFE_MODE=true` prevents raw policy text from being persisted
 - `PERSIST_RAW_TEXT=false` to strip raw text from outputs
 - `WANDB_ENABLED=true` for optional LLM call logging
