@@ -308,6 +308,7 @@ def _load_demo_assets() -> Tuple[Dict[str, Any], Dict[str, Any]]:
 def _load_demo_into_session() -> None:
     try:
         policy_result, dispute_result = _load_demo_assets()
+        section_map = _load_demo_section_map()
     except FileNotFoundError as exc:
         st.error(str(exc))
         st.stop()
@@ -317,7 +318,7 @@ def _load_demo_into_session() -> None:
 
     st.session_state[SESSION_KEY_POLICY] = policy_result
     st.session_state[SESSION_KEY_DISPUTE] = dispute_result
-    st.session_state[SESSION_KEY_SECTION_MAP] = _load_demo_section_map()
+    st.session_state[SESSION_KEY_SECTION_MAP] = section_map
     st.session_state[SESSION_KEY_CLAIM_METADATA] = {
         "nickname": "Demo Mode",
         "state": "",
