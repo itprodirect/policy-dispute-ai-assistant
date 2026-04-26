@@ -162,6 +162,77 @@ def test_run_policy_analysis_returns_in_memory_section_text_map(
     assert "raw_text" not in policy_result["sections_substantive"][0]
 
 
+def test_run_policy_analysis_forwards_focused_and_keeps_full_section_map(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    raw_sections = {
+        "DEFINITIONS": "Definitions text",
+        "COVERAGE A - DWELLING": "Dwelling text",
+        "LOSS SETTLEMENT": "Full raw section text still available for citations",
+    }
+    summary_json_path = tmp_path / "processed" / "uploaded.json"
+    summary_json_path.parent.mkdir()
+    summary_json_path.write_text(
+        json.dumps(
+            {
+                "policy_id": "uploaded",
+                "policy_path": "uploaded.pdf",
+                "analysis_mode": "focused",
+                "sections": [
+                    {
+                        "section_name": "DEFINITIONS",
+                        "summary_overall": "Definitions summary",
+                        "key_coverages": [],
+                        "key_exclusions": [],
+                        "conditions_notable": [],
+                        "dispute_angles_possible": [],
+                        "section_role": "substantive",
+                    },
+                    {
+                        "section_name": "COVERAGE A - DWELLING",
+                        "summary_overall": "Dwelling summary",
+                        "key_coverages": [],
+                        "key_exclusions": [],
+                        "conditions_notable": [],
+                        "dispute_angles_possible": [],
+                        "section_role": "substantive",
+                    },
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    summarize_mock = Mock(return_value=(summary_json_path, raw_sections))
+
+    monkeypatch.setattr(demo_api, "UPLOAD_DIR", tmp_path / "uploads")
+    monkeypatch.setattr(
+        demo_api,
+        "get_settings",
+        lambda: SimpleNamespace(safe_mode=False, persist_raw_text=False),
+    )
+    monkeypatch.setattr(demo_api, "start_wandb_run", lambda **kwargs: None)
+    monkeypatch.setattr(demo_api, "finish_wandb_run", lambda: None)
+    monkeypatch.setattr(
+        demo_api,
+        "summarize_policy_with_sections",
+        summarize_mock,
+    )
+
+    policy_result = demo_api.run_policy_analysis(
+        b"%PDF",
+        "uploaded.pdf",
+        focused=True,
+    )
+
+    assert summarize_mock.call_args.kwargs["focused"] is True
+    assert policy_result["analysis_mode"] == "focused"
+    assert policy_result["section_text_map"] == build_section_text_map(raw_sections)
+    assert "LOSS SETTLEMENT" in policy_result["section_text_map"]
+    assert "LOSS SETTLEMENT" not in [
+        section["section_name"] for section in policy_result["sections_substantive"]
+    ]
+
+
 class _FakeStatus:
     def __init__(self) -> None:
         self.updates: list[dict] = []
@@ -243,6 +314,9 @@ class _FakeIntakeStreamlit:
             return self.denial_file
         return None
 
+    def checkbox(self, *args, **kwargs) -> bool:
+        return False
+
     def form_submit_button(self, *args, **kwargs) -> bool:
         return True
 
@@ -320,6 +394,54 @@ def test_frontend_live_path_uses_policy_result_section_map_without_reprocessing(
 
     assert fake_st.session_state[frontend_app.SESSION_KEY_SECTION_MAP] == section_map
     load_pdf_text.assert_called_once_with(denial_path)
+
+
+def test_frontend_run_full_analysis_forwards_focused_true(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    summary_json_path = tmp_path / "policy.json"
+    summary_json_path.write_text(
+        json.dumps({"policy_id": "policy", "analysis_mode": "focused", "sections": []}),
+        encoding="utf-8",
+    )
+    denial_path = tmp_path / "denial.pdf"
+    denial_path.write_bytes(b"%PDF denial")
+    fake_st = _FakeStreamlit()
+    run_policy_analysis = Mock(
+        return_value={
+            "policy_name": "policy",
+            "source_path": "",
+            "analysis_mode": "focused",
+            "section_text_map": {},
+            "artifacts": {"summary_json": str(summary_json_path)},
+        }
+    )
+
+    monkeypatch.setattr(frontend_app, "st", fake_st)
+    monkeypatch.setattr(frontend_app, "is_demo_force_on", lambda: False)
+    monkeypatch.setattr(frontend_app, "run_policy_analysis", run_policy_analysis)
+    monkeypatch.setattr(frontend_app, "_save_denial_pdf", lambda uploaded, nickname: denial_path)
+    monkeypatch.setattr(frontend_app, "load_pdf_text", Mock(return_value="denial text"))
+    monkeypatch.setattr(
+        frontend_app,
+        "build_denial_aware_report",
+        lambda policy_summary_payload, denial_text: SimpleNamespace(
+            policy_id=None,
+            denial_id=None,
+            to_dict=lambda: {"plain_summary": "done"},
+        ),
+    )
+    monkeypatch.setattr(frontend_app, "render_dispute_markdown", lambda *args, **kwargs: "md")
+
+    frontend_app._run_full_analysis(
+        claim_nickname="Kitchen",
+        state="TX",
+        policy_file=SimpleNamespace(name="policy.pdf", getvalue=lambda: b"%PDF"),
+        denial_file=SimpleNamespace(name="denial.pdf"),
+        focused=True,
+    )
+
+    assert run_policy_analysis.call_args.kwargs["focused"] is True
 
 
 def test_frontend_live_path_empty_section_map_does_not_overwrite_session_map(

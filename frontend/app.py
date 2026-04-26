@@ -491,6 +491,7 @@ def _build_export_context(
     policy_filename: str | None = None,
     denial_filename: str | None = None,
     demo_mode: bool = False,
+    analysis_mode: str | None = None,
 ) -> Dict[str, Any]:
     claim_metadata = claim_metadata or {}
     context: Dict[str, Any] = {"generated_date": date.today().isoformat()}
@@ -511,10 +512,24 @@ def _build_export_context(
         context["policy_filename"] = policy_filename
     if denial_filename:
         context["denial_filename"] = denial_filename
+    mode_label = _analysis_mode_label(
+        analysis_mode or str(claim_metadata.get("analysis_mode", "") or "")
+    )
+    if mode_label:
+        context["analysis_mode"] = mode_label
     if demo_mode:
         context["demo_mode"] = True
 
     return context
+
+
+def _analysis_mode_label(analysis_mode: str | None) -> str:
+    mode = str(analysis_mode or "").strip().lower()
+    if mode == "focused":
+        return "Focused"
+    if mode == "full":
+        return "Full"
+    return ""
 
 
 def _render_hero(
@@ -525,6 +540,7 @@ def _render_hero(
     denial_filename: str | None = None,
     claim_metadata: Dict[str, Any] | None = None,
     demo_mode: bool = False,
+    analysis_mode: str | None = None,
 ) -> None:
     st.subheader("Dispute overview")
 
@@ -576,6 +592,12 @@ def _render_hero(
         st.markdown("##### Review context")
         st.write(f"**Policy file:** {policy_filename or policy_label}")
         st.write(f"**Denial file:** {denial_filename or denial_label}")
+        mode_label = _analysis_mode_label(
+            analysis_mode
+            or str((claim_metadata or {}).get("analysis_mode", "") or "")
+        )
+        if mode_label:
+            st.write(f"**Analysis mode:** {mode_label}")
         if score is not None:
             try:
                 st.metric("Confidence", f"{float(score):.2f}")
@@ -588,6 +610,7 @@ def _render_hero(
             policy_filename=policy_filename,
             denial_filename=denial_filename,
             demo_mode=demo_mode,
+            analysis_mode=analysis_mode,
         )
         export_docx = render_dispute_docx(report_obj, context=export_context)
         export_markdown = render_dispute_markdown(report_obj, context=export_context)
@@ -850,6 +873,7 @@ def _run_full_analysis(
     state: str,
     policy_file,
     denial_file,
+    focused: bool = False,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     End-to-end:
@@ -876,7 +900,9 @@ def _run_full_analysis(
         policy_result = run_policy_analysis(
             policy_file.getvalue(),
             policy_file.name,
+            focused=focused,
         )
+        analysis_mode = str(policy_result.get("analysis_mode") or "full")
 
         # Step 1b: Reuse in-memory section text map from policy analysis.
         section_map = policy_result.get("section_text_map") or {}
@@ -935,6 +961,7 @@ def _run_full_analysis(
                 },
                 policy_filename=policy_file.name,
                 denial_filename=denial_file.name,
+                analysis_mode=_analysis_mode_label(analysis_mode) or "Full",
             ),
         )
         dispute_report_dict = dispute_obj.to_dict()
@@ -942,11 +969,13 @@ def _run_full_analysis(
         dispute_result: Dict[str, Any] = {
             "policy_id": dispute_obj.policy_id,
             "denial_id": dispute_obj.denial_id,
+            "analysis_mode": analysis_mode,
             "dispute_report": dispute_report_dict,
             "markdown": markdown,
             "artifacts": {
                 "summary_json": str(summary_json_path),
                 "denial_pdf": str(denial_path),
+                "analysis_mode": analysis_mode,
             },
         }
 
@@ -1003,6 +1032,14 @@ def _render_intake_form() -> None:
             key="denial_pdf",
             help="The carrier's denial letter as a PDF.",
         )
+        focused_analysis = st.checkbox(
+            "Focused analysis - faster, core policy sections only",
+            value=False,
+            help=(
+                "Full analysis is the default. Focused analysis is narrower and "
+                "summarizes only core policy sections before building the dispute report."
+            ),
+        )
 
         submitted = st.form_submit_button("Analyze claim", type="primary")
 
@@ -1026,6 +1063,7 @@ def _render_intake_form() -> None:
             state=state.strip(),
             policy_file=policy_file,
             denial_file=denial_file,
+            focused=focused_analysis,
         )
     except Exception as e:
         st.error(f"Analysis failed: {e}")
@@ -1038,6 +1076,7 @@ def _render_intake_form() -> None:
         "state": state.strip(),
         "policy_filename": policy_file.name,
         "denial_filename": denial_file.name,
+        "analysis_mode": policy_result.get("analysis_mode") or "full",
     }
 
     policy_result_for_persistence = dict(policy_result)
@@ -1076,6 +1115,14 @@ def _render_results_section() -> None:
     policy_label = str(dispute_result.get("policy_id") or "policy")
     denial_label = str(dispute_result.get("denial_id") or "denial")
     claim_metadata = st.session_state.get(SESSION_KEY_CLAIM_METADATA, {}) or {}
+    analysis_mode = str(
+        policy_result.get("analysis_mode")
+        or dispute_result.get("analysis_mode")
+        or claim_metadata.get("analysis_mode")
+        or ""
+    )
+    if analysis_mode.lower() == "focused":
+        st.info("Focused analysis used: core policy sections only.")
 
     _render_hero(
         dispute_report,
@@ -1085,6 +1132,7 @@ def _render_results_section() -> None:
         denial_filename=claim_metadata.get("denial_filename"),
         claim_metadata=claim_metadata,
         demo_mode=bool(st.session_state.get(SESSION_KEY_DEMO_MODE)),
+        analysis_mode=analysis_mode,
     )
 
     st.markdown("### Detailed dispute views")
@@ -1171,6 +1219,11 @@ def _render_claim_history_page() -> None:
 
             policy_label = str(dispute_result.get("policy_id") or "policy")
             denial_label = str(dispute_result.get("denial_id") or "denial")
+            analysis_mode = str(
+                policy_result.get("analysis_mode")
+                or dispute_result.get("analysis_mode")
+                or ""
+            )
 
             st.divider()
 
@@ -1183,7 +1236,9 @@ def _render_claim_history_page() -> None:
                 claim_metadata={
                     "nickname": claim.nickname,
                     "state": claim.state,
+                    "analysis_mode": analysis_mode,
                 },
+                analysis_mode=analysis_mode,
             )
 
             st.markdown("### Detailed dispute views")
