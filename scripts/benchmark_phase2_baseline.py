@@ -198,7 +198,12 @@ def benchmark_demo_bundle() -> Dict[str, Any]:
     }
 
 
-def benchmark_live_pipeline(policy_pdf: Path, denial_text_path: Path) -> Dict[str, Any]:
+def benchmark_live_pipeline(
+    policy_pdf: Path,
+    denial_text_path: Path,
+    *,
+    focused: bool = False,
+) -> Dict[str, Any]:
     from src.demo_api import run_dispute_analysis
     from src.run_baseline_policy_summary import summarize_policy
 
@@ -211,7 +216,13 @@ def benchmark_live_pipeline(policy_pdf: Path, denial_text_path: Path) -> Dict[st
         raise FileNotFoundError(f"Denial text file not found: {denial_text_path}")
 
     with _timed("policy_summary_pipeline", timings):
-        summary_json_path = summarize_policy(policy_pdf)
+        summary_json_path = summarize_policy(policy_pdf, focused=focused)
+
+    summary_payload = _read_json(summary_json_path)
+    summary_sections = summary_payload.get("sections") or []
+    analysis_mode = str(
+        summary_payload.get("analysis_mode") or ("focused" if focused else "full")
+    )
 
     with _timed("load_denial_text", timings):
         denial_text = denial_text_path.read_text(encoding="utf-8", errors="ignore")
@@ -230,6 +241,8 @@ def benchmark_live_pipeline(policy_pdf: Path, denial_text_path: Path) -> Dict[st
         "mode": "live_pipeline",
         "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
         "api_calls_made": True,
+        "focused": focused,
+        "analysis_mode": analysis_mode,
         "inputs": {
             "policy_pdf": str(policy_pdf),
             "denial_text": str(denial_text_path),
@@ -237,6 +250,11 @@ def benchmark_live_pipeline(policy_pdf: Path, denial_text_path: Path) -> Dict[st
         "environment": _environment(),
         "total_wall_clock_seconds": total_wall_clock_seconds,
         "stage_timings": timings,
+        "counts": {
+            "policy_summary_sections": (
+                len(summary_sections) if isinstance(summary_sections, list) else None
+            ),
+        },
         "artifacts": {
             "policy_summary_json": str(summary_json_path),
             **(dispute_result.get("artifacts") or {}),
@@ -271,6 +289,11 @@ def parse_args() -> argparse.Namespace:
         help="Denial letter .txt file for --mode live. Requires OPENAI_API_KEY.",
     )
     parser.add_argument(
+        "--focused",
+        action="store_true",
+        help="Use focused-analysis mode for --mode live. Ignored for demo mode.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         help="Optional path to write benchmark metrics JSON.",
@@ -286,7 +309,11 @@ def main() -> None:
     else:
         if args.policy_pdf is None or args.denial_text is None:
             raise SystemExit("--mode live requires --policy-pdf and --denial-text")
-        result = benchmark_live_pipeline(args.policy_pdf, args.denial_text)
+        result = benchmark_live_pipeline(
+            args.policy_pdf,
+            args.denial_text,
+            focused=args.focused,
+        )
 
     rendered = json.dumps(result, indent=2, ensure_ascii=False)
     print(rendered)

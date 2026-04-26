@@ -1,6 +1,6 @@
 # Heartbeat
 
-Last updated: 2026-04-26 post-#52 docs sync
+Last updated: 2026-04-26 post-#53 final benchmark report
 
 ## Current Phase
 - Phase 1 is complete: Phase 1A demo polish, Phase 1B technical closeout, and Phase 1C local/demo trust polish.
@@ -11,6 +11,7 @@ Last updated: 2026-04-26 post-#52 docs sync
 - Phase 2 section-summary latency reduction is complete via #50 / PR #62.
 - Phase 2 redundant live policy PDF reprocessing cleanup is complete via #51 / PR #64.
 - Phase 2 focused-analysis mode is complete via #52 / PR #66.
+- Phase 2 final benchmark comparison reporting is complete via #53.
 
 ## Current Truth
 - PR #44 wrapped Phase 1 and handed off to Phase 2 baseline benchmarking.
@@ -30,26 +31,28 @@ Last updated: 2026-04-26 post-#52 docs sync
 - Export context now includes Mode, including Demo Mode plus Focused/Full combinations.
 - PR #66 validation: `python -m pytest -q` passed with 85 tests.
 - The checked-in baseline is deterministic demo-bundle mode with no API calls.
+- The final Phase 2 comparison is `benchmarks/phase2-final.md`; it preserves `benchmarks/phase2-baseline.md` as the historical before-state and records current demo parity plus full/focused live measurements for the HO3 TRUE FL fixture.
 - #21 Demo Mode citation/source accordions are complete via PR #41.
 - Demo source-map loading hardening is complete via PR #42.
 - #23 human-readable export context and human/AI export grouping are complete via PR #43.
 - The repo remains a research prototype with AI-generated and not-legal-advice framing.
 
 ## Next Action
-- Start #53 P2-7 Add final Phase 2 benchmark comparison report. Do not bundle prompt rewrites, report schema changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, deployment/auth/storage work, PDF export work, or unrelated refactors.
+- Phase 2 is closed after #53. Consider #18 Streamlit deployment prep or #20 walkthrough/video recipe later as separate post-Phase-2 work only when needed.
 
 ## Deferred
 - #18 Streamlit deployment prep — deferred because hosted deployment is not needed yet and adds surface area.
 - #20 walkthrough/video recipe — deferred until after Phase 2 model/API/speed upgrades stabilize.
 
 ## Watchouts
-- #46 baseline benchmarking is complete; use it as the before-state reference for remaining Phase 2 work.
+- #46 baseline benchmarking is complete; keep `benchmarks/phase2-baseline.md` as the before-state reference.
 - #47 Responses API migration is complete; do not re-open API migration work while starting #53.
 - #48 Structured Outputs is complete for final dispute report generation only; do not expand it while starting #53.
 - #49 stage-specific model configuration is complete; do not tune model choices by default while starting #53.
 - #50 section-summary concurrency is complete; do not rework prompts, schemas, model configuration, retry behavior, telemetry, or benchmark code while starting #53.
 - #51 redundant live policy PDF reprocessing cleanup is complete; do not re-open PDF processing while starting #53.
-- #52 focused-analysis mode is complete; do not re-open filtering, prompt, schema, model, or citation/source accordion behavior while starting #53.
+- #52 focused-analysis mode is complete; do not re-open filtering, prompt, schema, model, or citation/source accordion behavior after #53.
+- #53 final reporting is complete; do not add token/cost telemetry or a quality scoring harness unless a later issue explicitly asks for it.
 - Section summaries remain on `json_object` mode unless a later issue explicitly changes that.
 - Section-summary calls use bounded `ThreadPoolExecutor` concurrency; keep `SECTION_SUMMARY_MAX_WORKERS=1` as the sequential kill-switch.
 - The live citation source map reuses first-pass raw sections in memory; `section_text_map` is stripped before claim persistence.

@@ -29,6 +29,7 @@ Phase 1 is complete. The app remains a Streamlit research prototype with determi
 - PR #62: #50 bounded concurrency for section-summary LLM calls.
 - PR #64: #51 redundant live policy PDF reprocessing cleanup.
 - PR #66: #52 focused-analysis mode.
+- #53: final Phase 2 benchmark comparison report.
 
 ## Current Phase
 
@@ -42,7 +43,7 @@ Phase 1C local/demo trust polish is complete with #21 Demo Mode citation/source 
 
 #20 walkthrough video and screenshot recipe is intentionally deferred because walkthrough/video work should wait until after Phase 2 stabilizes.
 
-Phase 2 baseline benchmarking is complete via #46 / PR #54. #47 Responses API migration is complete via PR #56. #48 Structured Outputs is complete via PR #58 for final dispute report generation only. #49 stage-specific model configuration is complete via PR #60. #50 section-summary latency reduction is complete via PR #62. #51 redundant live policy PDF reprocessing cleanup is complete via PR #64. #52 focused-analysis mode is complete via PR #66.
+Phase 2 baseline benchmarking is complete via #46 / PR #54. #47 Responses API migration is complete via PR #56. #48 Structured Outputs is complete via PR #58 for final dispute report generation only. #49 stage-specific model configuration is complete via PR #60. #50 section-summary latency reduction is complete via PR #62. #51 redundant live policy PDF reprocessing cleanup is complete via PR #64. #52 focused-analysis mode is complete via PR #66. #53 final Phase 2 benchmark comparison reporting is complete.
 
 Stage-specific model overrides are available through `OPENAI_MODEL_<STAGE_UPPER>`, such as `OPENAI_MODEL_SECTION_SUMMARY` and `OPENAI_MODEL_DISPUTE_REPORT`. Default model behavior is unchanged unless a per-stage override is explicitly set.
 
@@ -54,7 +55,9 @@ PR #66 added explicit opt-in focused-analysis mode. Full analysis remains the de
 
 Focused mode preserves citation/source accordion behavior: `section_text_map` still comes from full raw sections, while raw policy section text is still stripped before claim persistence. Export context now includes a Mode row, including Demo Mode plus Focused/Full combinations. PR #66 validation: `python -m pytest -q` passed with 85 tests.
 
-Phase 2 is complete through #52. The next intended issue is #53 P2-7 Add final Phase 2 benchmark comparison report. Do not start #53 as part of post-#52 docs sync.
+The final Phase 2 benchmark comparison report is `benchmarks/phase2-final.md`. It keeps `benchmarks/phase2-baseline.md` as the historical before-state, records deterministic demo parity, current live full/focused measurements for the HO3 TRUE FL fixture, and documents limitations around live baselines, token/cost telemetry, and quality scoring.
+
+Phase 2 is complete through #53. #18 Streamlit Community Cloud deployment prep and #20 walkthrough/video recipe remain deferred post-Phase-2 work.
 
 ## Local Cleanup
 
