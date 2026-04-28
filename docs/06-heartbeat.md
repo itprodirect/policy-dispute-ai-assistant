@@ -1,6 +1,6 @@
 # Heartbeat
 
-Last updated: 2026-04-26 post-#53 final benchmark report
+Last updated: 2026-04-28 sales-proof docs closeout
 
 ## Current Phase
 - Phase 1 is complete: Phase 1A demo polish, Phase 1B technical closeout, and Phase 1C local/demo trust polish.
@@ -36,11 +36,16 @@ Last updated: 2026-04-26 post-#53 final benchmark report
 - Demo source-map loading hardening is complete via PR #42.
 - #23 human-readable export context and human/AI export grouping are complete via PR #43.
 - The repo remains a research prototype with AI-generated and not-legal-advice framing.
+- `docs/10-sales-proof.md` records the sales-proof and website/case-study positioning.
+- Current portfolio decision: credible private sales demo and case-study material, not public production proof.
+- Safe claims are limited to internal prototype, human-review workflow, homeowners policy and denial-letter triage, A-G dispute summaries, deterministic Demo Mode, Markdown/Word exports, tests, CI, and demo-safe screenshots.
+- Avoid claims of production readiness, legal accuracy, coverage determination, client-proven outcomes, secure hosted SaaS, or broad policy-form support.
 
 ## Next Action
-- Phase 2 is closed after #53. Consider #18 Streamlit deployment prep or #20 walkthrough/video recipe later as separate post-Phase-2 work only when needed.
+- Phase 2 is closed after #53. If public promotion is next, start with artifact safety review and a Demo Mode walkthrough package before hosted deployment.
 
 ## Deferred
+- Public promotion remains deferred until demo assets, tracked generated artifacts, screenshots, and limitation language are reviewed.
 - #18 Streamlit deployment prep — deferred because hosted deployment is not needed yet and adds surface area.
 - #20 walkthrough/video recipe — deferred until after Phase 2 model/API/speed upgrades stabilize.
 
@@ -57,3 +62,4 @@ Last updated: 2026-04-26 post-#53 final benchmark report
 - Section-summary calls use bounded `ThreadPoolExecutor` concurrency; keep `SECTION_SUMMARY_MAX_WORKERS=1` as the sequential kill-switch.
 - The live citation source map reuses first-pass raw sections in memory; `section_text_map` is stripped before claim persistence.
 - Preserve research prototype / AI-generated / not legal advice framing.
+- Do not turn sales copy into production, legal, or client-outcome claims.

@@ -319,3 +319,32 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - Phase 2 is closed. Pick the next issue explicitly; likely post-Phase-2 candidates are #18 Streamlit deployment prep or #20 walkthrough/screenshot recipe if they are still needed.
+
+### 2026-04-28 - Sales-proof docs closeout
+
+#### Goal
+- Capture the final sales-proof, website, demo, and client-facing evidence readout before ending the session.
+
+#### Completed
+- Added `docs/10-sales-proof.md`.
+- Linked the sales-proof doc from `README.md`.
+- Updated current state, heartbeat, memory, and decision log with the private-sales-proof positioning.
+- Preserved the current framing: research prototype, AI-generated, human-review, demo-safe, and not legal advice.
+
+#### Decisions
+- Use the repo as credible private sales proof and website/case-study source material.
+- Do not market it as production-ready, legally accurate, client-proven, or a hosted secure SaaS product.
+- See `docs/05-decision-log.md` for the 2026-04-28 sales-proof decision.
+
+#### Validation
+- `git diff --check` passed.
+- Full pytest not run because this was docs-only.
+
+#### Deferred
+- Public promotion package.
+- Artifact safety review for tracked generated outputs.
+- Walkthrough video and citation/source screenshot refresh.
+- Hosted deployment, auth, storage, and production readiness work.
+
+#### Next session starter
+- If promotion is next, start with artifact safety review and a Demo Mode walkthrough package using `docs/10-sales-proof.md` as the positioning source.

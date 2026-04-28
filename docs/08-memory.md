@@ -26,6 +26,7 @@ Durable project timeline for future Codex and Claude sessions.
 - #52 preserves citation/source accordions because `section_text_map` still comes from full raw sections. Raw policy section text is still not persisted. Export context now includes Mode, including Demo Mode plus Focused/Full combinations.
 - `benchmarks/phase2-final.md` is the final Phase 2 comparison report. It preserves `benchmarks/phase2-baseline.md` as historical before-state, records deterministic demo parity, and records current live full/focused measurements for the HO3 TRUE FL fixture.
 - Phase 2 is closed after #53. Do not bundle prompt rewrites, report schema changes, Structured Outputs changes, model configuration changes, section-summary concurrency changes, retry changes, telemetry semantics changes, deployment/auth/storage work, PDF export work, token/cost telemetry, quality scoring harnesses, or unrelated refactors into Phase 2 closeout docs.
+- `docs/10-sales-proof.md` is the durable sales-proof readout. Use the repo as private sales proof, website case-study source material, and demo evidence only. Do not imply production readiness, legal accuracy, client outcomes, secure hosted SaaS, or broad policy-form support.
 
 ## Timeline
 
@@ -46,6 +47,7 @@ Durable project timeline for future Codex and Claude sessions.
 | 2026-04-26 00:25 ET | Redundant live policy PDF reprocessing cleanup merged | #51 / PR #64 | Reuses first-pass raw sections for the in-memory citation source map and strips `section_text_map` before claim persistence to avoid raw policy text persistence. |
 | 2026-04-26 | Focused-analysis mode merged | #52 / PR #66 | Added explicit opt-in focused mode for canonical core policy sections while preserving full analysis as the default and keeping citation/source accordions backed by full raw sections. |
 | 2026-04-26 | Final Phase 2 benchmark comparison added | #53 | Added `benchmarks/phase2-final.md`, kept the historical baseline immutable, and closed Phase 2 with current demo parity plus full/focused live benchmark measurements. |
+| 2026-04-28 | Sales-proof docs closeout | docs-only | Added `docs/10-sales-proof.md` and recorded that the repo is credible private sales proof, not public production proof. |
 
 ## Standing Guardrails
 
@@ -53,3 +55,4 @@ Durable project timeline for future Codex and Claude sessions.
 - Keep work one issue per PR.
 - Do not commit secrets, real client data, real claim names, claim numbers, or fake client proof.
 - Keep routine logs, archived docs, and screenshots unchanged unless an issue explicitly requires them.
+- Sales and website copy must stay evidence-bound: prototype, demo-safe, human-review, not legal advice.

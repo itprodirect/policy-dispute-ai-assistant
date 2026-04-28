@@ -117,3 +117,20 @@ Use this format for future entries:
 
 ### Revisit trigger
 - Revisit only if a later benchmark issue adds a new measurement scope, telemetry source, or evaluation harness.
+
+## 2026-04-28 ET - Use repo as private sales proof, not public production proof
+
+### Context
+- After Phase 2, the repo has credible demo assets, screenshots, tests, CI, exports, and benchmark docs.
+- It still lacks production deployment, auth, secure hosted storage, broad policy-form support, legal validation, and client outcome evidence.
+
+### Decision
+- Use the repo as private sales proof, website case-study source material, and technical demo evidence.
+- Do not market it as production-ready, legally accurate, client-proven, or a hosted client-facing product.
+
+### Consequence
+- Public and sales copy must preserve research prototype, AI-generated, human-review, demo-safe, and not-legal-advice framing.
+- Public promotion should wait on artifact safety review, walkthrough assets, and clear limitation language.
+
+### Revisit trigger
+- Revisit if the repo gains production deployment, auth/access control, privacy review, quality evaluation, and reviewed client-safe demo materials.

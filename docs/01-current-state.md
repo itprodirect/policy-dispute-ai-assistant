@@ -1,8 +1,14 @@
 # Current State
 
-Last updated: 2026-04-26
+Last updated: 2026-04-28
 
 Phase 1 is complete. The app remains a Streamlit research prototype with deterministic Demo Mode, a live API-backed local workflow, README screenshots, and explicit AI-generated / not-legal-advice framing.
+
+## Sales-Proof Positioning
+
+As of 2026-04-28, `docs/10-sales-proof.md` records the portfolio and sales-proof readout. The repo is credible as a private sales demo, website case-study source, and technical proof of AI-assisted insurance document workflow capability.
+
+Do not position it as production-ready, legally accurate, client-proven, or a hosted secure SaaS product. The safest current positioning is: internal research prototype and human-review workflow accelerator for homeowners policy and denial-letter triage.
 
 ## Completed Phase 1A Issues
 
