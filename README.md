@@ -91,6 +91,10 @@ Durable project history lives in:
 - `docs/08-memory.md`
 - `docs/09-session-log.md`
 
+Portfolio / sales-proof positioning lives in:
+
+- `docs/10-sales-proof.md`
+
 ---
 
 ## Repo structure
