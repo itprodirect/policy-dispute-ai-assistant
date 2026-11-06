@@ -1,0 +1,35 @@
+name: Web demo
+
+on:
+  pull_request:
+    paths:
+      - "web/**"
+      - ".github/workflows/web.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - ".github/workflows/web.yml"
+
+jobs:
+  nextjs:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify synthetic demo parity
+        run: npm run test:demo
+      - name: Type-check TypeScript
+        run: npm run typecheck
+      - name: Build Next.js production bundle
+        run: npm run build
