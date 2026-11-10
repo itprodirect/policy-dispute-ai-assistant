@@ -1,6 +1,6 @@
 # Heartbeat
 
-Last updated: 2026-04-28 sales-proof docs closeout
+Last updated: 2026-11-10 PR #71 build reproducibility follow-up
 
 ## Current Phase
 - Phase 1 is complete: Phase 1A demo polish, Phase 1B technical closeout, and Phase 1C local/demo trust polish.
@@ -14,6 +14,7 @@ Last updated: 2026-04-28 sales-proof docs closeout
 - Phase 2 final benchmark comparison reporting is complete via #53.
 
 ## Current Truth
+- Draft PR #71 proposes an independent offline demo web workspace. Its build follow-up adds a dependency lockfile, deterministic `npm ci`, and CI coverage for canonical `assets/demo/` changes. Changes are prepared locally, not published or merged.
 - PR #44 wrapped Phase 1 and handed off to Phase 2 baseline benchmarking.
 - PR #54 merged the repeatable Phase 2 before-state benchmark harness.
 - PR #56 migrated the single OpenAI wrapper to the Responses API without prompt, schema, model, retry, telemetry, PDF-processing, benchmark, or pipeline optimization changes.
@@ -42,6 +43,7 @@ Last updated: 2026-04-28 sales-proof docs closeout
 - Avoid claims of production readiness, legal accuracy, coverage determination, client-proven outcomes, secure hosted SaaS, or broad policy-form support.
 
 ## Next Action
+- Review and authorize publication of the PR #71 build follow-up, then check CI on the resulting remote commit. Handle keyboard focus separately.
 - Phase 2 is closed after #53. If public promotion is next, start with artifact safety review and a Demo Mode walkthrough package before hosted deployment.
 
 ## Deferred
