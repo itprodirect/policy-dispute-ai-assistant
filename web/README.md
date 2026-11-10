@@ -10,11 +10,13 @@ Install Node.js 22+ and npm, then from the repository root:
 
 ```bash
 cd web
-npm install
+npm ci
 npm run test:demo
 npm run typecheck
 npm run dev
 ```
+
+The committed `package-lock.json` pins the full dependency tree. Use `npm ci` for clean installs and CI. When intentionally changing dependencies, run `npm install` and commit both the manifest and updated lockfile.
 
 Open [http://localhost:3000](http://localhost:3000).
 

@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - "web/**"
+      - "assets/demo/**"
       - ".github/workflows/web.yml"
   push:
     branches:
       - main
     paths:
       - "web/**"
+      - "assets/demo/**"
       - ".github/workflows/web.yml"
 
 jobs:
@@ -25,8 +27,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Verify synthetic demo parity
         run: npm run test:demo
       - name: Type-check TypeScript

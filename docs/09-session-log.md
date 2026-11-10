@@ -348,3 +348,12 @@ Track real working sessions so future AI/dev sessions can quickly understand wha
 
 #### Next session starter
 - If promotion is next, start with artifact safety review and a Demo Mode walkthrough package using `docs/10-sales-proof.md` as the positioning source.
+
+### 2026-11-10 - PR #71 build reproducibility follow-up
+
+- Goal: make the offline web demo install reproducible and run parity checks when canonical demo assets change.
+- Completed: generated `web/package-lock.json`; switched CI and local setup to `npm ci`; added npm caching and `assets/demo/**` to pull-request and main-push triggers.
+- Decisions: preserve existing dependency declarations, demo content, and Python implementation. Keep publication, merge, and deployment separate.
+- Validation: demo parity, TypeScript, and production build passed with Node 24; Python 3.12 suite passed (85 tests); parsed workflow assertions covered both triggers, canonical assets, lockfile, install command, and cache path. Repeated clean install, parity, typecheck, and production build passed with Node 22.23.4/npm 10.9.10, matching the CI Node major; lockfile SHA-256 stayed unchanged.
+- Deferred: keyboard focus issue, remote CI for these changes, merge, and deployment.
+- Next session starter: review local changes and obtain publication approval before updating PR #71.
